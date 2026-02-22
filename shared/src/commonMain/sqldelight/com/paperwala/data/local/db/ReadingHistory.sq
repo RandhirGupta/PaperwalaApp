@@ -1,0 +1,31 @@
+CREATE TABLE ReadingHistoryEntity (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    article_id TEXT NOT NULL,
+    edition_id TEXT,
+    read_at INTEGER NOT NULL,
+    read_duration_seconds INTEGER,
+    FOREIGN KEY (article_id) REFERENCES ArticleEntity(id)
+);
+
+insertReadEvent:
+INSERT INTO ReadingHistoryEntity(article_id, edition_id, read_at, read_duration_seconds)
+VALUES (?, ?, ?, ?);
+
+getReadingHistoryForEdition:
+SELECT * FROM ReadingHistoryEntity WHERE edition_id = ? ORDER BY read_at DESC;
+
+getReadDatesInRange:
+SELECT DISTINCT read_at FROM ReadingHistoryEntity
+WHERE read_at >= ? AND read_at <= ?
+ORDER BY read_at;
+
+getTotalArticlesRead:
+SELECT COUNT(DISTINCT article_id) FROM ReadingHistoryEntity;
+
+getTotalReadingTimeSeconds:
+SELECT COALESCE(SUM(read_duration_seconds), 0) FROM ReadingHistoryEntity;
+
+getReadingHistoryByDate:
+SELECT * FROM ReadingHistoryEntity
+WHERE read_at >= ? AND read_at <= ?
+ORDER BY read_at DESC;

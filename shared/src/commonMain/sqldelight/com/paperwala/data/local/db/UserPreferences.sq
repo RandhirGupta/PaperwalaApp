@@ -1,0 +1,40 @@
+CREATE TABLE UserPreferencesEntity (
+    id INTEGER PRIMARY KEY DEFAULT 1,
+    selected_topics TEXT NOT NULL DEFAULT '',
+    preferred_sources TEXT NOT NULL DEFAULT '',
+    reading_time_minutes INTEGER NOT NULL DEFAULT 10,
+    delivery_time_hour INTEGER NOT NULL DEFAULT 7,
+    has_completed_onboarding INTEGER NOT NULL DEFAULT 0,
+    enable_notifications INTEGER NOT NULL DEFAULT 1,
+    enable_local_llm INTEGER NOT NULL DEFAULT 0
+);
+
+getPreferences:
+SELECT * FROM UserPreferencesEntity WHERE id = 1;
+
+insertOrUpdatePreferences:
+INSERT OR REPLACE INTO UserPreferencesEntity(
+    id, selected_topics, preferred_sources, reading_time_minutes,
+    delivery_time_hour, has_completed_onboarding, enable_notifications, enable_local_llm
+) VALUES (1, ?, ?, ?, ?, ?, ?, ?);
+
+updateTopics:
+UPDATE UserPreferencesEntity SET selected_topics = ? WHERE id = 1;
+
+updateSources:
+UPDATE UserPreferencesEntity SET preferred_sources = ? WHERE id = 1;
+
+updateReadingTime:
+UPDATE UserPreferencesEntity SET reading_time_minutes = ? WHERE id = 1;
+
+updateDeliveryTime:
+UPDATE UserPreferencesEntity SET delivery_time_hour = ? WHERE id = 1;
+
+markOnboardingComplete:
+UPDATE UserPreferencesEntity SET has_completed_onboarding = 1 WHERE id = 1;
+
+updateNotifications:
+UPDATE UserPreferencesEntity SET enable_notifications = ? WHERE id = 1;
+
+updateLocalLlm:
+UPDATE UserPreferencesEntity SET enable_local_llm = ? WHERE id = 1;

@@ -1,0 +1,70 @@
+CREATE TABLE ArticleEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    title TEXT NOT NULL,
+    summary TEXT NOT NULL DEFAULT '',
+    full_content TEXT,
+    source_url TEXT NOT NULL,
+    source_name TEXT NOT NULL,
+    source_logo_url TEXT,
+    image_url TEXT,
+    author TEXT,
+    published_at INTEGER NOT NULL,
+    fetched_at INTEGER NOT NULL,
+    category TEXT NOT NULL,
+    relevance_score REAL NOT NULL DEFAULT 0.0,
+    read_time_minutes INTEGER NOT NULL DEFAULT 3,
+    is_read INTEGER NOT NULL DEFAULT 0,
+    is_bookmarked INTEGER NOT NULL DEFAULT 0
+);
+
+getArticleById:
+SELECT * FROM ArticleEntity WHERE id = ?;
+
+getArticlesByCategory:
+SELECT * FROM ArticleEntity
+WHERE category = ?
+ORDER BY relevance_score DESC, published_at DESC
+LIMIT ?;
+
+getRecentArticles:
+SELECT * FROM ArticleEntity
+WHERE fetched_at > ?
+ORDER BY published_at DESC;
+
+getUnreadArticles:
+SELECT * FROM ArticleEntity
+WHERE is_read = 0
+ORDER BY relevance_score DESC, published_at DESC;
+
+getBookmarkedArticles:
+SELECT * FROM ArticleEntity
+WHERE is_bookmarked = 1
+ORDER BY published_at DESC;
+
+getTopArticles:
+SELECT * FROM ArticleEntity
+WHERE fetched_at > ?
+ORDER BY relevance_score DESC
+LIMIT ?;
+
+insertArticle:
+INSERT OR REPLACE INTO ArticleEntity(
+    id, title, summary, full_content, source_url, source_name,
+    source_logo_url, image_url, author, published_at, fetched_at,
+    category, relevance_score, read_time_minutes, is_read, is_bookmarked
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+markAsRead:
+UPDATE ArticleEntity SET is_read = 1 WHERE id = ?;
+
+toggleBookmark:
+UPDATE ArticleEntity SET is_bookmarked = CASE WHEN is_bookmarked = 0 THEN 1 ELSE 0 END WHERE id = ?;
+
+updateSummaryAndScore:
+UPDATE ArticleEntity SET summary = ?, relevance_score = ? WHERE id = ?;
+
+deleteOldArticles:
+DELETE FROM ArticleEntity WHERE fetched_at < ?;
+
+getArticleCount:
+SELECT COUNT(*) FROM ArticleEntity;

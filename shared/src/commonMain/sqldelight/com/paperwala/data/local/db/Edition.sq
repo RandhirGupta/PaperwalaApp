@@ -1,0 +1,56 @@
+CREATE TABLE EditionEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    date TEXT NOT NULL,
+    generated_at INTEGER NOT NULL,
+    headline TEXT NOT NULL,
+    total_read_time_minutes INTEGER NOT NULL,
+    article_count INTEGER NOT NULL,
+    is_read INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE EditionArticleEntity (
+    edition_id TEXT NOT NULL,
+    article_id TEXT NOT NULL,
+    section_category TEXT NOT NULL,
+    display_order INTEGER NOT NULL,
+    PRIMARY KEY (edition_id, article_id),
+    FOREIGN KEY (edition_id) REFERENCES EditionEntity(id),
+    FOREIGN KEY (article_id) REFERENCES ArticleEntity(id)
+);
+
+getEditionByDate:
+SELECT * FROM EditionEntity WHERE date = ?;
+
+getEditionById:
+SELECT * FROM EditionEntity WHERE id = ?;
+
+getRecentEditions:
+SELECT * FROM EditionEntity
+ORDER BY date DESC
+LIMIT ?;
+
+getEditionArticles:
+SELECT ArticleEntity.*, EditionArticleEntity.section_category, EditionArticleEntity.display_order
+FROM EditionArticleEntity
+INNER JOIN ArticleEntity ON EditionArticleEntity.article_id = ArticleEntity.id
+WHERE EditionArticleEntity.edition_id = ?
+ORDER BY EditionArticleEntity.section_category, EditionArticleEntity.display_order;
+
+insertEdition:
+INSERT OR REPLACE INTO EditionEntity(
+    id, date, generated_at, headline, total_read_time_minutes, article_count, is_read
+) VALUES (?, ?, ?, ?, ?, ?, ?);
+
+insertEditionArticle:
+INSERT OR REPLACE INTO EditionArticleEntity(
+    edition_id, article_id, section_category, display_order
+) VALUES (?, ?, ?, ?);
+
+markEditionAsRead:
+UPDATE EditionEntity SET is_read = 1 WHERE id = ?;
+
+deleteOldEditions:
+DELETE FROM EditionEntity WHERE date < ?;
+
+deleteEditionArticles:
+DELETE FROM EditionArticleEntity WHERE edition_id = ?;
