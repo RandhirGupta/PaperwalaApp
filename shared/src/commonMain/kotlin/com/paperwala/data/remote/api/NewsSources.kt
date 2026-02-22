@@ -82,22 +82,37 @@ object NewsSources {
         SourceInfo(
             id = "times-of-india",
             displayName = "Times of India",
-            isIndian = true
+            isIndian = true,
+            rssFeeds = mapOf(
+                "india" to "https://timesofindia.indiatimes.com/rssfeedstopstories.cms",
+                "technology" to "https://timesofindia.indiatimes.com/rssfeeds/66949542.cms",
+                "sports" to "https://timesofindia.indiatimes.com/rssfeeds/4719148.cms"
+            )
         ),
         SourceInfo(
             id = "economic-times",
             displayName = "Economic Times",
-            isIndian = true
+            isIndian = true,
+            rssFeeds = mapOf(
+                "markets" to "https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms",
+                "tech" to "https://economictimes.indiatimes.com/tech/rssfeeds/13357270.cms"
+            )
         ),
         SourceInfo(
             id = "the-wire",
             displayName = "The Wire",
-            isIndian = true
+            isIndian = true,
+            rssFeeds = mapOf(
+                "all" to "https://thewire.in/feed"
+            )
         ),
         SourceInfo(
             id = "the-print",
             displayName = "The Print",
-            isIndian = true
+            isIndian = true,
+            rssFeeds = mapOf(
+                "all" to "https://theprint.in/feed/"
+            )
         )
     )
 
@@ -115,7 +130,10 @@ object NewsSources {
         SourceInfo(
             id = "reuters",
             displayName = "Reuters",
-            isIndian = false
+            isIndian = false,
+            rssFeeds = mapOf(
+                "world" to "https://www.reutersagency.com/feed/"
+            )
         ),
         SourceInfo(
             id = "the-guardian",
@@ -129,12 +147,18 @@ object NewsSources {
         SourceInfo(
             id = "al-jazeera",
             displayName = "Al Jazeera",
-            isIndian = false
+            isIndian = false,
+            rssFeeds = mapOf(
+                "all" to "https://www.aljazeera.com/xml/rss/all.xml"
+            )
         ),
         SourceInfo(
             id = "ap-news",
             displayName = "AP News",
-            isIndian = false
+            isIndian = false,
+            rssFeeds = mapOf(
+                "top" to "https://rsshub.app/apnews/topics/apf-topnews"
+            )
         )
     )
 

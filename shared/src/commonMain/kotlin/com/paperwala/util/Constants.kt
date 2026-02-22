@@ -20,6 +20,7 @@ object Constants {
     // These are placeholders — replace with actual keys
     const val NEWS_API_KEY = ""
     const val GNEWS_API_KEY = ""
+    const val NEWSDATA_API_KEY = ""
 
     // Edition settings
     const val DEFAULT_READING_TIME_MINUTES = 10

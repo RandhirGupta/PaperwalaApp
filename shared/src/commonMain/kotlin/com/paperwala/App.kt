@@ -16,11 +16,17 @@
 package com.paperwala
 
 import androidx.compose.runtime.Composable
+import coil3.compose.setSingletonImageLoaderFactory
+import com.paperwala.presentation.image.createImageLoader
 import com.paperwala.presentation.navigation.AppNavigator
 import com.paperwala.presentation.theme.PaperwalaTheme
 
 @Composable
 fun App() {
+    setSingletonImageLoaderFactory { context ->
+        createImageLoader(context)
+    }
+
     PaperwalaTheme {
         AppNavigator()
     }

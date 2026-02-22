@@ -13,16 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.paperwala.di
+package com.paperwala.data.sync
 
-import com.paperwala.data.local.db.DatabaseDriverFactory
-import com.paperwala.data.sync.BackgroundSyncScheduler
-import com.paperwala.util.ConnectivityObserver
-import org.koin.android.ext.koin.androidContext
-import org.koin.dsl.module
-
-val androidModule = module {
-    single { DatabaseDriverFactory(androidContext()) }
-    single { ConnectivityObserver(androidContext()) }
-    single { BackgroundSyncScheduler(androidContext()) }
+expect class BackgroundSyncScheduler {
+    fun scheduleEditionSync(deliveryHour: Int)
+    fun cancelSync()
 }

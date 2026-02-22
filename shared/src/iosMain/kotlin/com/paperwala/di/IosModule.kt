@@ -16,8 +16,12 @@
 package com.paperwala.di
 
 import com.paperwala.data.local.db.DatabaseDriverFactory
+import com.paperwala.data.sync.BackgroundSyncScheduler
+import com.paperwala.util.ConnectivityObserver
 import org.koin.dsl.module
 
 val iosModule = module {
     single { DatabaseDriverFactory() }
+    single { ConnectivityObserver() }
+    single { BackgroundSyncScheduler() }
 }

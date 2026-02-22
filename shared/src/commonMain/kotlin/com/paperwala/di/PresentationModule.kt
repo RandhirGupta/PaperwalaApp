@@ -20,12 +20,13 @@ import com.paperwala.presentation.screens.onboarding.OnboardingViewModel
 import org.koin.dsl.module
 
 val presentationModule = module {
-    factory { OnboardingViewModel(userRepository = get()) }
+    factory { OnboardingViewModel(userRepository = get(), syncScheduler = get()) }
     factory {
         MorningEditionViewModel(
             generateEditionUseCase = get(),
             newsRepository = get(),
-            userRepository = get()
+            userRepository = get(),
+            connectivityObserver = get()
         )
     }
 }

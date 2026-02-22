@@ -61,7 +61,7 @@ fun PaperwalaTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = NewspaperTypography,
+        typography = NewspaperTypography(),
         content = content
     )
 }

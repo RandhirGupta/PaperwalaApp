@@ -15,6 +15,8 @@
  */
 package com.paperwala.data.remote.api
 
+import com.fleeksoft.ksoup.Ksoup
+import com.fleeksoft.ksoup.parser.Parser
 import com.paperwala.data.remote.dto.RssItem
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -25,52 +27,42 @@ class RssFeedService(private val httpClient: HttpClient) {
     suspend fun fetchFeed(url: String): List<RssItem> {
         return try {
             val xml = httpClient.get(url).bodyAsText()
-            parseRssXml(xml, feedUrl = url)
+            parseWithKSoup(xml, feedUrl = url)
         } catch (e: Exception) {
             emptyList()
         }
     }
 
-    private fun parseRssXml(xml: String, feedUrl: String): List<RssItem> {
-        val items = mutableListOf<RssItem>()
-        val itemRegex = Regex("<item>(.*?)</item>", RegexOption.DOT_MATCHES_ALL)
-        val matches = itemRegex.findAll(xml)
+    private fun parseWithKSoup(xml: String, feedUrl: String): List<RssItem> {
+        val doc = Ksoup.parse(xml, parser = Parser.xmlParser())
 
-        for (match in matches) {
-            val itemXml = match.groupValues[1]
-            items.add(
-                RssItem(
-                    title = extractTag(itemXml, "title"),
-                    link = extractTagOrNull(itemXml, "link"),
-                    description = extractTagOrNull(itemXml, "description"),
-                    author = extractTagOrNull(itemXml, "dc:creator")
-                        ?: extractTagOrNull(itemXml, "author"),
-                    pubDate = extractTagOrNull(itemXml, "pubDate"),
-                    guid = extractTagOrNull(itemXml, "guid"),
-                    enclosureUrl = extractEnclosureUrl(itemXml),
-                    feedUrl = feedUrl
-                )
+        // Support both RSS 2.0 (<item>) and Atom (<entry>)
+        val items = doc.select("item").ifEmpty { doc.select("entry") }
+
+        return items.map { element ->
+            val link = element.selectFirst("link")?.text()?.takeIf { it.isNotBlank() }
+                ?: element.selectFirst("link")?.attr("href")
+
+            val imageUrl = element.selectFirst("enclosure")?.attr("url")
+                ?: element.selectFirst("media|content")?.attr("url")
+                ?: element.selectFirst("media|thumbnail")?.attr("url")
+
+            RssItem(
+                title = element.selectFirst("title")?.text() ?: "",
+                link = link,
+                description = element.selectFirst("description")?.text()
+                    ?: element.selectFirst("summary")?.text(),
+                author = element.selectFirst("dc|creator")?.text()
+                    ?: element.selectFirst("author")?.text()
+                    ?: element.selectFirst("author name")?.text(),
+                pubDate = element.selectFirst("pubDate")?.text()
+                    ?: element.selectFirst("published")?.text()
+                    ?: element.selectFirst("updated")?.text(),
+                guid = element.selectFirst("guid")?.text()
+                    ?: element.selectFirst("id")?.text(),
+                enclosureUrl = imageUrl,
+                feedUrl = feedUrl
             )
         }
-        return items
-    }
-
-    private fun extractTag(xml: String, tag: String): String {
-        return extractTagOrNull(xml, tag) ?: ""
-    }
-
-    private fun extractTagOrNull(xml: String, tag: String): String? {
-        // Handle CDATA sections
-        val cdataRegex = Regex("<$tag[^>]*>\\s*<!\\[CDATA\\[(.*?)]]>\\s*</$tag>", RegexOption.DOT_MATCHES_ALL)
-        cdataRegex.find(xml)?.let { return it.groupValues[1].trim() }
-
-        // Handle regular tags
-        val regex = Regex("<$tag[^>]*>(.*?)</$tag>", RegexOption.DOT_MATCHES_ALL)
-        return regex.find(xml)?.groupValues?.get(1)?.trim()
-    }
-
-    private fun extractEnclosureUrl(xml: String): String? {
-        val regex = Regex("<enclosure[^>]*url=\"([^\"]+)\"")
-        return regex.find(xml)?.groupValues?.get(1)
     }
 }

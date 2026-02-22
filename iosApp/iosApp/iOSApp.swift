@@ -14,16 +14,35 @@
  * limitations under the License.
  */
 import SwiftUI
+import BackgroundTasks
+import shared
 
 @main
 struct iOSApp: App {
     init() {
         KoinInit.shared.doInit()
+        registerBackgroundTasks()
     }
 
     var body: some Scene {
         WindowGroup {
             ContentView()
+        }
+    }
+
+    private func registerBackgroundTasks() {
+        BGTaskScheduler.shared.register(
+            forTaskWithIdentifier: "com.paperwala.edition.refresh",
+            using: nil
+        ) { task in
+            guard let refreshTask = task as? BGAppRefreshTask else { return }
+
+            SyncHelper.shared.performSync { success in
+                refreshTask.setTaskCompleted(success: success)
+            }
+
+            // Reschedule for next day
+            SyncHelper.shared.rescheduleSync(deliveryHour: 7)
         }
     }
 }

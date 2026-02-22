@@ -19,6 +19,7 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.paperwala.data.remote.api.NewsSources
 import com.paperwala.data.repository.UserRepository
+import com.paperwala.data.sync.BackgroundSyncScheduler
 import com.paperwala.domain.model.TopicCategory
 import com.paperwala.domain.model.UserPreferences
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,7 +37,8 @@ data class OnboardingState(
 )
 
 class OnboardingViewModel(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val syncScheduler: BackgroundSyncScheduler
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(OnboardingState())
@@ -114,6 +116,7 @@ class OnboardingViewModel(
                 enableLocalLlm = false
             )
             userRepository.savePreferences(prefs)
+            syncScheduler.scheduleEditionSync(state.deliveryTimeHour)
             onComplete()
         }
     }

@@ -13,16 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.paperwala.di
+package com.paperwala.util
 
-import com.paperwala.data.local.db.DatabaseDriverFactory
-import com.paperwala.data.sync.BackgroundSyncScheduler
-import com.paperwala.util.ConnectivityObserver
-import org.koin.android.ext.koin.androidContext
-import org.koin.dsl.module
+import kotlinx.coroutines.flow.Flow
 
-val androidModule = module {
-    single { DatabaseDriverFactory(androidContext()) }
-    single { ConnectivityObserver(androidContext()) }
-    single { BackgroundSyncScheduler(androidContext()) }
+enum class ConnectivityStatus {
+    AVAILABLE, LOST
+}
+
+expect class ConnectivityObserver {
+    fun observe(): Flow<ConnectivityStatus>
 }

@@ -17,6 +17,7 @@ package com.paperwala.data.mapper
 
 import com.paperwala.data.remote.dto.GNewsArticle
 import com.paperwala.data.remote.dto.NewsApiArticle
+import com.paperwala.data.remote.dto.NewsdataArticle
 import com.paperwala.data.remote.dto.RssItem
 import com.paperwala.domain.model.Article
 import com.paperwala.domain.model.TopicCategory
@@ -89,6 +90,52 @@ object ArticleMapper {
             category = inferCategoryFromFeedUrl(item.feedUrl),
             readTimeMinutes = ReadTimeCalculator.estimateMinutes(cleanDescription)
         )
+    }
+
+    fun fromNewsdata(dto: NewsdataArticle): Article {
+        val parsedInstant = try {
+            Instant.parse(dto.pubDate ?: "")
+        } catch (e: Exception) {
+            Clock.System.now()
+        }
+
+        val inferredCategory = if (!dto.category.isNullOrEmpty()) {
+            mapNewsdataCategory(dto.category.first())
+        } else {
+            inferCategoryFromText(dto.title, dto.description)
+        }
+
+        return Article(
+            id = dto.articleId.ifBlank { dto.link.hashCode().toString() },
+            title = HtmlParser.stripTags(dto.title),
+            summary = HtmlParser.stripTags(dto.description),
+            fullContent = dto.content,
+            sourceUrl = dto.link,
+            sourceName = dto.sourceName ?: dto.sourceId,
+            imageUrl = dto.imageUrl,
+            author = dto.creator?.firstOrNull(),
+            publishedAt = parsedInstant,
+            fetchedAt = Clock.System.now(),
+            category = inferredCategory,
+            readTimeMinutes = ReadTimeCalculator.estimateMinutes(dto.content)
+        )
+    }
+
+    private fun mapNewsdataCategory(category: String): TopicCategory {
+        return when (category.lowercase()) {
+            "politics" -> TopicCategory.POLITICS
+            "technology" -> TopicCategory.TECHNOLOGY
+            "sports" -> TopicCategory.SPORTS
+            "business" -> TopicCategory.BUSINESS
+            "entertainment" -> TopicCategory.ENTERTAINMENT
+            "science" -> TopicCategory.SCIENCE
+            "health" -> TopicCategory.HEALTH
+            "world" -> TopicCategory.WORLD_NEWS
+            "environment" -> TopicCategory.ENVIRONMENT
+            "education" -> TopicCategory.EDUCATION
+            "top" -> TopicCategory.INDIA
+            else -> TopicCategory.WORLD_NEWS
+        }
     }
 
     private fun parseRssDate(dateStr: String?): Instant {

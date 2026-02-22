@@ -81,21 +81,23 @@ class GenerateMorningEditionUseCase(
     ): List<Section> {
         val sections = mutableListOf<Section>()
         val usedArticleIds = mutableSetOf<String>()
+        val nowMillis = Clock.System.now().toEpochMilliseconds()
 
         // Calculate how many articles we can fit
         val avgReadTime = 3 // avg minutes per article
         val maxArticles = (targetReadTimeMinutes / avgReadTime).coerceIn(5, 30)
 
-        // "Above the Fold" — top 3 articles by relevance score (any category)
+        // "Above the Fold" — top 3 by composite score, with source diversity (max 1 per source)
         val topArticles = articles
-            .sortedByDescending { it.relevanceScore * 0.6f + (if (it.category in userTopics) 0.4f else 0f) }
+            .sortedByDescending { compositeScore(it, userTopics, nowMillis) }
+            .enforceDiversity(maxPerSource = 1)
             .take(3)
             .also { list -> usedArticleIds.addAll(list.map { it.id }) }
 
         if (topArticles.isNotEmpty()) {
             sections.add(
                 Section(
-                    category = TopicCategory.INDIA, // Default for front page
+                    category = TopicCategory.INDIA,
                     displayName = "Above the Fold",
                     articles = topArticles
                 )
@@ -111,8 +113,9 @@ class GenerateMorningEditionUseCase(
 
             val sectionArticles = articles
                 .filter { it.category == topic && it.id !in usedArticleIds }
-                .sortedByDescending { it.relevanceScore }
-                .take(minOf(3, remainingSlots))
+                .sortedByDescending { compositeScore(it, userTopics, nowMillis) }
+                .enforceDiversity(maxPerSource = 2)
+                .take(minOf(5, remainingSlots))
 
             if (sectionArticles.isNotEmpty()) {
                 sections.add(
@@ -128,6 +131,42 @@ class GenerateMorningEditionUseCase(
         }
 
         return sections
+    }
+
+    /** Composite score: relevance (50%) + recency boost (20%) + topic match (30%) */
+    private fun compositeScore(
+        article: Article,
+        userTopics: List<TopicCategory>,
+        nowMillis: Long
+    ): Float {
+        val relevance = article.relevanceScore * 0.5f
+
+        // Recency: articles within 6 hours get up to 0.2 boost, linearly decaying to 0 at 24h
+        val ageHours = (nowMillis - article.publishedAt.toEpochMilliseconds()) / 3_600_000.0f
+        val recencyBoost = when {
+            ageHours <= 6f -> 0.2f
+            ageHours <= 24f -> 0.2f * (1f - (ageHours - 6f) / 18f)
+            else -> 0f
+        }
+
+        // Topic match: preferred topics get a 0.3 boost
+        val topicMatch = if (article.category in userTopics) 0.3f else 0f
+
+        return relevance + recencyBoost + topicMatch
+    }
+
+    /** Enforce source diversity: keep at most [maxPerSource] articles from the same source. */
+    private fun List<Article>.enforceDiversity(maxPerSource: Int): List<Article> {
+        val sourceCounts = mutableMapOf<String, Int>()
+        return filter { article ->
+            val count = sourceCounts.getOrPut(article.sourceName) { 0 }
+            if (count < maxPerSource) {
+                sourceCounts[article.sourceName] = count + 1
+                true
+            } else {
+                false
+            }
+        }
     }
 
     private fun generateHeadline(sections: List<Section>): String {

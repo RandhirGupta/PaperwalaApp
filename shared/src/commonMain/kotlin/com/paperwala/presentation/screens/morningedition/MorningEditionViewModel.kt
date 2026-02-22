@@ -21,22 +21,28 @@ import com.paperwala.data.repository.NewsRepository
 import com.paperwala.data.repository.UserRepository
 import com.paperwala.domain.model.Edition
 import com.paperwala.domain.usecase.GenerateMorningEditionUseCase
+import com.paperwala.util.ConnectivityObserver
+import com.paperwala.util.ConnectivityStatus
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 data class MorningEditionState(
     val edition: Edition? = null,
     val isLoading: Boolean = true,
     val error: String? = null,
-    val userName: String = ""
+    val userName: String = "",
+    val isOffline: Boolean = false
 )
 
 class MorningEditionViewModel(
     private val generateEditionUseCase: GenerateMorningEditionUseCase,
     private val newsRepository: NewsRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val connectivityObserver: ConnectivityObserver
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(MorningEditionState())
@@ -44,6 +50,17 @@ class MorningEditionViewModel(
 
     init {
         loadEdition()
+        observeConnectivity()
+    }
+
+    private fun observeConnectivity() {
+        connectivityObserver.observe()
+            .onEach { status ->
+                _state.value = _state.value.copy(
+                    isOffline = status == ConnectivityStatus.LOST
+                )
+            }
+            .launchIn(screenModelScope)
     }
 
     fun loadEdition(forceRefresh: Boolean = false) {

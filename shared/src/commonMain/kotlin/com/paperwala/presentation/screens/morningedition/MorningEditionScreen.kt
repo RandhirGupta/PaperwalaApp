@@ -16,10 +16,6 @@
 package com.paperwala.presentation.screens.morningedition
 
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,14 +27,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -47,7 +42,6 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
@@ -55,8 +49,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -71,8 +63,14 @@ import coil3.compose.AsyncImage
 import com.paperwala.domain.model.Article
 import com.paperwala.domain.model.Edition
 import com.paperwala.domain.model.Section
+import com.paperwala.presentation.animation.EditionLoadingAnimation
+import com.paperwala.presentation.animation.articleEntrance
+import com.paperwala.presentation.animation.heroEntrance
+import com.paperwala.presentation.animation.mastheadEntrance
+import com.paperwala.presentation.animation.newspaperUnfold
 import com.paperwala.presentation.components.CompactArticleCard
 import com.paperwala.presentation.components.NewspaperDivider
+import com.paperwala.presentation.components.OfflineBanner
 import com.paperwala.presentation.components.SectionHeader
 import com.paperwala.presentation.screens.articledetail.ArticleDetailScreen
 import com.paperwala.presentation.theme.PaperwalaColors
@@ -90,21 +88,25 @@ class MorningEditionScreen : Screen {
         val viewModel = koinScreenModel<MorningEditionViewModel>()
         val state by viewModel.state.collectAsState()
 
-        PullToRefreshBox(
-            isRefreshing = state.isLoading,
-            onRefresh = { viewModel.refresh() },
-            modifier = Modifier.fillMaxSize()
-        ) {
-            when {
-                state.isLoading && state.edition == null -> LoadingState()
-                state.error != null && state.edition == null -> ErrorState(state.error!!)
-                state.edition != null -> EditionContent(
-                    edition = state.edition!!,
-                    onArticleClick = { article ->
-                        viewModel.markArticleAsRead(article.id)
-                        navigator.push(ArticleDetailScreen(article))
-                    }
-                )
+        Column(modifier = Modifier.fillMaxSize()) {
+            OfflineBanner(isOffline = state.isOffline)
+
+            PullToRefreshBox(
+                isRefreshing = state.isLoading,
+                onRefresh = { viewModel.refresh() },
+                modifier = Modifier.fillMaxSize()
+            ) {
+                when {
+                    state.isLoading && state.edition == null -> LoadingState()
+                    state.error != null && state.edition == null -> ErrorState(state.error!!)
+                    state.edition != null -> EditionContent(
+                        edition = state.edition!!,
+                        onArticleClick = { article ->
+                            viewModel.markArticleAsRead(article.id)
+                            navigator.push(ArticleDetailScreen(article))
+                        }
+                    )
+                }
             }
         }
     }
@@ -117,7 +119,9 @@ private fun LoadingState() {
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            CircularProgressIndicator(color = PaperwalaColors.MastheadRed)
+            EditionLoadingAnimation(
+                modifier = Modifier.size(160.dp)
+            )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = "Preparing your morning edition...",
@@ -175,17 +179,21 @@ private fun EditionContent(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Masthead
+        // Masthead with slide-down entrance
         item {
-            NewspaperMasthead(edition)
+            NewspaperMasthead(
+                edition = edition,
+                modifier = Modifier.mastheadEntrance()
+            )
         }
 
-        // Above the Fold section
+        // Above the Fold section with hero entrance
         if (aboveTheFold != null) {
             item {
                 AboveTheFoldSection(
                     section = aboveTheFold,
-                    onArticleClick = onArticleClick
+                    onArticleClick = onArticleClick,
+                    modifier = Modifier.heroEntrance(delayMs = 300)
                 )
             }
         }
@@ -200,6 +208,7 @@ private fun EditionContent(
             SectionWithUnfold(
                 section = section,
                 hasAppeared = hasAppeared,
+                index = index,
                 onArticleClick = onArticleClick
             )
         }
@@ -212,7 +221,10 @@ private fun EditionContent(
 }
 
 @Composable
-private fun NewspaperMasthead(edition: Edition) {
+private fun NewspaperMasthead(
+    edition: Edition,
+    modifier: Modifier = Modifier
+) {
     val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
     val greeting = when (now.hour) {
         in 5..11 -> "Good Morning"
@@ -221,12 +233,11 @@ private fun NewspaperMasthead(edition: Edition) {
     }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Masthead title
         Text(
             text = "PAPERWALA",
             style = MaterialTheme.typography.displayLarge,
@@ -249,7 +260,6 @@ private fun NewspaperMasthead(edition: Edition) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Greeting and meta
         Text(
             text = greeting,
             style = MaterialTheme.typography.headlineLarge,
@@ -291,12 +301,13 @@ private fun NewspaperMasthead(edition: Edition) {
 @Composable
 private fun AboveTheFoldSection(
     section: Section,
-    onArticleClick: (Article) -> Unit
+    onArticleClick: (Article) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val articles = section.articles
     if (articles.isEmpty()) return
 
-    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+    Column(modifier = modifier.padding(horizontal = 16.dp)) {
         // Hero article (first one)
         val hero = articles.first()
         HeroArticle(article = hero, onClick = { onArticleClick(hero) })
@@ -442,30 +453,13 @@ private fun SubArticle(
 private fun SectionWithUnfold(
     section: Section,
     hasAppeared: Boolean,
+    index: Int,
     onArticleClick: (Article) -> Unit
 ) {
-    // 3D unfold animation
-    val rotationX by animateFloatAsState(
-        targetValue = if (hasAppeared) 0f else -90f,
-        animationSpec = spring(
-            dampingRatio = 0.65f,
-            stiffness = Spring.StiffnessLow
-        )
-    )
-    val alpha by animateFloatAsState(
-        targetValue = if (hasAppeared) 1f else 0f,
-        animationSpec = tween(durationMillis = 400)
-    )
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .graphicsLayer {
-                this.rotationX = rotationX
-                this.alpha = alpha
-                this.cameraDistance = 12f * density
-                this.transformOrigin = TransformOrigin(0.5f, 0f)
-            }
+            .newspaperUnfold(visible = hasAppeared, index = index)
             .animateContentSize()
     ) {
         SectionHeader(
@@ -473,15 +467,19 @@ private fun SectionWithUnfold(
             categoryName = section.category.name
         )
 
-        // Horizontal scrolling cards for this section
+        // Horizontal scrolling cards with staggered entrance
         LazyRow(
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            items(section.articles) { article ->
+            itemsIndexed(section.articles) { articleIndex, article ->
                 CompactArticleCard(
                     article = article,
-                    onClick = { onArticleClick(article) }
+                    onClick = { onArticleClick(article) },
+                    modifier = Modifier.articleEntrance(
+                        visible = hasAppeared,
+                        index = articleIndex
+                    )
                 )
             }
         }
@@ -506,7 +504,7 @@ private fun EditionFooter(edition: Edition) {
         )
 
         Text(
-            text = "End of today's edition",
+            text = "End of today\u2019s edition",
             style = MaterialTheme.typography.titleMedium,
             color = PaperwalaColors.InkLightGray
         )

@@ -17,6 +17,7 @@ package com.paperwala.di
 
 import com.paperwala.data.remote.api.GNewsApiService
 import com.paperwala.data.remote.api.NewsApiService
+import com.paperwala.data.remote.api.NewsdataApiService
 import com.paperwala.data.remote.api.RssFeedService
 import com.paperwala.data.remote.createHttpClient
 import com.paperwala.data.repository.EditionRepository
@@ -30,6 +31,7 @@ val networkModule = module {
     single { createHttpClient() }
     single { NewsApiService(get()) }
     single { GNewsApiService(get()) }
+    single { NewsdataApiService(get()) }
     single { RssFeedService(get()) }
 }
 
@@ -39,9 +41,11 @@ val repositoryModule = module {
             database = get(),
             newsApiService = get(),
             gNewsApiService = get(),
+            newsdataApiService = get(),
             rssFeedService = get(),
             newsApiKey = Constants.NEWS_API_KEY,
-            gNewsApiKey = Constants.GNEWS_API_KEY
+            gNewsApiKey = Constants.GNEWS_API_KEY,
+            newsdataApiKey = Constants.NEWSDATA_API_KEY
         )
     }
     single { UserRepository(database = get()) }
