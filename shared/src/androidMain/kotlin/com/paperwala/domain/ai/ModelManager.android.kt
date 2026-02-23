@@ -30,25 +30,25 @@ actual class ModelManager(private val context: Context) {
     private val modelsDir: File
         get() = File(context.filesDir, "models").also { it.mkdirs() }
 
-    private val modelFile: File
-        get() = File(modelsDir, MODEL_FILENAME)
+    private fun modelFile(model: LlmModel): File = File(modelsDir, model.fileName)
 
-    actual suspend fun downloadModel(onProgress: (Float) -> Unit): Boolean =
+    actual suspend fun downloadModel(model: LlmModel, onProgress: (Float) -> Unit): Boolean =
         withContext(Dispatchers.IO) {
-            // Check available storage (need ~3GB free)
             val freeSpace = modelsDir.usableSpace
-            if (freeSpace < REQUIRED_SPACE_BYTES) {
+            val requiredSpace = model.sizeBytes + 500_000_000L // model size + 500MB buffer
+            if (freeSpace < requiredSpace) {
                 throw IllegalStateException(
-                    "Insufficient storage. Need ${REQUIRED_SPACE_BYTES / (1024 * 1024)}MB, " +
+                    "Insufficient storage. Need ${requiredSpace / (1024 * 1024)}MB, " +
                         "available: ${freeSpace / (1024 * 1024)}MB"
                 )
             }
 
-            val tempFile = File(modelsDir, "$MODEL_FILENAME.tmp")
+            val file = modelFile(model)
+            val tempFile = File(modelsDir, "${model.fileName}.tmp")
             try {
                 val client = HttpClient()
-                client.prepareGet(MODEL_DOWNLOAD_URL).execute { response ->
-                    val totalBytes = response.contentLength() ?: EXPECTED_MODEL_SIZE
+                client.prepareGet(model.downloadUrl).execute { response ->
+                    val totalBytes = response.contentLength() ?: model.sizeBytes
                     var downloadedBytes = 0L
                     val channel = response.bodyAsChannel()
                     val buffer = ByteArray(8192)
@@ -66,8 +66,7 @@ actual class ModelManager(private val context: Context) {
                 }
                 client.close()
 
-                // Rename temp to final
-                tempFile.renameTo(modelFile)
+                tempFile.renameTo(file)
                 true
             } catch (e: Exception) {
                 tempFile.delete()
@@ -75,32 +74,26 @@ actual class ModelManager(private val context: Context) {
             }
         }
 
-    actual fun getModelPath(): String? {
-        return if (modelFile.exists() && modelFile.length() > 0) {
-            modelFile.absolutePath
-        } else {
-            null
-        }
+    actual fun getModelPath(model: LlmModel): String? {
+        val file = modelFile(model)
+        return if (file.exists() && file.length() > 0) file.absolutePath else null
     }
 
-    actual fun isModelDownloaded(): Boolean {
-        return modelFile.exists() && modelFile.length() > MIN_VALID_MODEL_SIZE
+    actual fun isModelDownloaded(model: LlmModel): Boolean {
+        val file = modelFile(model)
+        return file.exists() && file.length() > MIN_VALID_MODEL_SIZE
     }
 
-    actual fun deleteModel() {
-        modelFile.delete()
+    actual fun deleteModel(model: LlmModel) {
+        modelFile(model).delete()
     }
 
-    actual fun getModelSizeBytes(): Long {
-        return if (modelFile.exists()) modelFile.length() else 0L
+    actual fun getModelSizeBytes(model: LlmModel): Long {
+        val file = modelFile(model)
+        return if (file.exists()) file.length() else 0L
     }
 
     companion object {
-        private const val MODEL_FILENAME = "phi-3-mini-4k-instruct-q4_k_m.gguf"
-        private const val MODEL_DOWNLOAD_URL =
-            "https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/Phi-3-mini-4k-instruct-q4.gguf"
-        private const val EXPECTED_MODEL_SIZE = 2_400_000_000L // ~2.3 GB
-        private const val REQUIRED_SPACE_BYTES = 3_000_000_000L // 3 GB free required
-        private const val MIN_VALID_MODEL_SIZE = 100_000_000L // 100 MB minimum to be valid
+        private const val MIN_VALID_MODEL_SIZE = 100_000_000L
     }
 }

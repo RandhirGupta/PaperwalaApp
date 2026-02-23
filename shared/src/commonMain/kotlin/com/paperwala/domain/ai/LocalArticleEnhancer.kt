@@ -29,9 +29,12 @@ class LocalArticleEnhancer(
         articles: List<Article>,
         userTopics: List<TopicCategory>
     ): List<EnhancedArticle> {
-        // Ensure model is loaded
+        // Ensure model is loaded using the user's selected model
         if (!llmEngine.isModelLoaded()) {
-            val modelPath = modelManager.getModelPath()
+            val selectedModel = LlmModel.entries.firstOrNull { model ->
+                modelManager.isModelDownloaded(model)
+            } ?: throw IllegalStateException("No model downloaded")
+            val modelPath = modelManager.getModelPath(selectedModel)
                 ?: throw IllegalStateException("Model not downloaded")
             llmEngine.loadModel(modelPath)
         }

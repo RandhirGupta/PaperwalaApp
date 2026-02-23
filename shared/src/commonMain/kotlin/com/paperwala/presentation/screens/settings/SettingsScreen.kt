@@ -16,6 +16,9 @@
 package com.paperwala.presentation.screens.settings
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -26,6 +29,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -33,10 +37,11 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -45,6 +50,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
@@ -52,6 +58,7 @@ import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.paperwala.domain.ai.AiStatus
+import com.paperwala.domain.ai.LlmModel
 import com.paperwala.presentation.theme.PaperwalaColors
 
 class SettingsScreen : Screen {
@@ -97,13 +104,14 @@ class SettingsScreen : Screen {
             AiSettingsSection(
                 state = state,
                 onToggleLocalLlm = viewModel::toggleLocalLlm,
+                onSelectModel = viewModel::selectModel,
                 onDownloadModel = viewModel::downloadModel,
                 onDeleteModel = viewModel::deleteModel
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // General section placeholder
+            // General section
             SectionHeader("General")
 
             SettingsRow(
@@ -136,6 +144,7 @@ class SettingsScreen : Screen {
 private fun AiSettingsSection(
     state: SettingsState,
     onToggleLocalLlm: (Boolean) -> Unit,
+    onSelectModel: (LlmModel) -> Unit,
     onDownloadModel: () -> Unit,
     onDeleteModel: () -> Unit
 ) {
@@ -177,7 +186,7 @@ private fun AiSettingsSection(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "Phi-3-mini (~2.3 GB). Summaries generated privately on your device.",
+                        text = "Summaries generated privately on your device.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -191,14 +200,36 @@ private fun AiSettingsSection(
                 )
             }
 
-            // Model management (shown when local LLM is enabled)
+            // Model selection & management (shown when local LLM is enabled)
             if (state.enableLocalLlm) {
+                Spacer(modifier = Modifier.height(16.dp))
+                HorizontalDivider(color = PaperwalaColors.DividerColor)
                 Spacer(modifier = Modifier.height(12.dp))
 
+                Text(
+                    text = "Choose Model",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Model picker
+                LlmModel.entries.forEach { model ->
+                    ModelOptionCard(
+                        model = model,
+                        isSelected = state.selectedModel == model,
+                        onSelect = { onSelectModel(model) }
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Download / status for selected model
                 if (state.isDownloading) {
-                    // Download progress
                     Text(
-                        text = "Downloading model... ${(state.downloadProgress * 100).toInt()}%",
+                        text = "Downloading ${state.selectedModel.displayName}... ${(state.downloadProgress * 100).toInt()}%",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -209,13 +240,12 @@ private fun AiSettingsSection(
                         color = PaperwalaColors.MastheadRed
                     )
                 } else if (state.isModelDownloaded) {
-                    // Model installed
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = "Model installed (${state.modelSizeMb} MB)",
+                            text = "${state.selectedModel.displayName} installed (${state.modelSizeMb} MB)",
                             style = MaterialTheme.typography.bodySmall,
                             color = PaperwalaColors.SportsGreen
                         )
@@ -230,7 +260,6 @@ private fun AiSettingsSection(
                         }
                     }
                 } else {
-                    // Download button
                     Button(
                         onClick = onDownloadModel,
                         modifier = Modifier.fillMaxWidth(),
@@ -238,7 +267,7 @@ private fun AiSettingsSection(
                             containerColor = PaperwalaColors.MastheadRed
                         )
                     ) {
-                        Text("Download Model (~2.3 GB)")
+                        Text("Download ${state.selectedModel.displayName} (${state.selectedModel.sizeDescription})")
                     }
                 }
 
@@ -252,6 +281,48 @@ private fun AiSettingsSection(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ModelOptionCard(
+    model: LlmModel,
+    isSelected: Boolean,
+    onSelect: () -> Unit
+) {
+    val borderColor = if (isSelected) PaperwalaColors.MastheadRed else PaperwalaColors.DividerColor
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .border(1.dp, borderColor, RoundedCornerShape(8.dp))
+            .clickable { onSelect() }
+            .padding(12.dp)
+    ) {
+        RadioButton(
+            selected = isSelected,
+            onClick = onSelect,
+            colors = RadioButtonDefaults.colors(
+                selectedColor = PaperwalaColors.MastheadRed
+            ),
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = model.displayName,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = "${model.sizeDescription} · ${model.speedDescription} · ${model.qualityDescription}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

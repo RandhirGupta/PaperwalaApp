@@ -6,7 +6,8 @@ CREATE TABLE UserPreferencesEntity (
     delivery_time_hour INTEGER NOT NULL DEFAULT 7,
     has_completed_onboarding INTEGER NOT NULL DEFAULT 0,
     enable_notifications INTEGER NOT NULL DEFAULT 1,
-    enable_local_llm INTEGER NOT NULL DEFAULT 0
+    enable_local_llm INTEGER NOT NULL DEFAULT 0,
+    selected_llm_model TEXT NOT NULL DEFAULT 'PHI_3_MINI'
 );
 
 getPreferences:
@@ -15,8 +16,9 @@ SELECT * FROM UserPreferencesEntity WHERE id = 1;
 insertOrUpdatePreferences:
 INSERT OR REPLACE INTO UserPreferencesEntity(
     id, selected_topics, preferred_sources, reading_time_minutes,
-    delivery_time_hour, has_completed_onboarding, enable_notifications, enable_local_llm
-) VALUES (1, ?, ?, ?, ?, ?, ?, ?);
+    delivery_time_hour, has_completed_onboarding, enable_notifications, enable_local_llm,
+    selected_llm_model
+) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?);
 
 updateTopics:
 UPDATE UserPreferencesEntity SET selected_topics = ? WHERE id = 1;
@@ -38,3 +40,6 @@ UPDATE UserPreferencesEntity SET enable_notifications = ? WHERE id = 1;
 
 updateLocalLlm:
 UPDATE UserPreferencesEntity SET enable_local_llm = ? WHERE id = 1;
+
+updateSelectedLlmModel:
+UPDATE UserPreferencesEntity SET selected_llm_model = ? WHERE id = 1;

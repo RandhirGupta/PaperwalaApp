@@ -15,6 +15,7 @@
  */
 package com.paperwala.domain.model
 
+import com.paperwala.domain.ai.LlmModel
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -25,5 +26,6 @@ data class UserPreferences(
     val deliveryTimeHour: Int = 7,
     val hasCompletedOnboarding: Boolean = false,
     val enableNotifications: Boolean = true,
-    val enableLocalLlm: Boolean = false
+    val enableLocalLlm: Boolean = false,
+    val selectedLlmModel: LlmModel = LlmModel.PHI_3_MINI
 )

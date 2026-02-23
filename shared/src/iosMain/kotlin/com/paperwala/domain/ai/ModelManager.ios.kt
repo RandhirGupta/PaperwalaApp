@@ -22,9 +22,6 @@ import platform.Foundation.NSFileManager
 import platform.Foundation.NSSearchPathForDirectoriesInDomains
 import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSUserDomainMask
-import platform.Foundation.NSURL
-import platform.Foundation.NSURLSession
-import platform.Foundation.NSURLSessionDownloadTask
 
 actual class ModelManager {
 
@@ -39,10 +36,9 @@ actual class ModelManager {
     private val modelsDir: String
         get() = "$documentsDir/models"
 
-    private val modelPath: String
-        get() = "$modelsDir/$MODEL_FILENAME"
+    private fun modelPath(model: LlmModel): String = "$modelsDir/${model.fileName}"
 
-    actual suspend fun downloadModel(onProgress: (Float) -> Unit): Boolean =
+    actual suspend fun downloadModel(model: LlmModel, onProgress: (Float) -> Unit): Boolean =
         withContext(Dispatchers.IO) {
             val fileManager = NSFileManager.defaultManager
             if (!fileManager.fileExistsAtPath(modelsDir)) {
@@ -55,33 +51,29 @@ actual class ModelManager {
             }
 
             // TODO: Implement download with NSURLSession and progress tracking
-            // For now, throw to indicate native setup required
             throw UnsupportedOperationException(
                 "iOS model download not yet implemented. " +
                     "Requires NSURLSession background download configuration."
             )
         }
 
-    actual fun getModelPath(): String? {
+    actual fun getModelPath(model: LlmModel): String? {
+        val path = modelPath(model)
+        return if (NSFileManager.defaultManager.fileExistsAtPath(path)) path else null
+    }
+
+    actual fun isModelDownloaded(model: LlmModel): Boolean {
+        return NSFileManager.defaultManager.fileExistsAtPath(modelPath(model))
+    }
+
+    actual fun deleteModel(model: LlmModel) {
+        NSFileManager.defaultManager.removeItemAtPath(modelPath(model), error = null)
+    }
+
+    actual fun getModelSizeBytes(model: LlmModel): Long {
         val fileManager = NSFileManager.defaultManager
-        return if (fileManager.fileExistsAtPath(modelPath)) modelPath else null
-    }
-
-    actual fun isModelDownloaded(): Boolean {
-        return NSFileManager.defaultManager.fileExistsAtPath(modelPath)
-    }
-
-    actual fun deleteModel() {
-        NSFileManager.defaultManager.removeItemAtPath(modelPath, error = null)
-    }
-
-    actual fun getModelSizeBytes(): Long {
-        val fileManager = NSFileManager.defaultManager
-        val attrs = fileManager.attributesOfItemAtPath(modelPath, error = null) ?: return 0L
+        val path = modelPath(model)
+        val attrs = fileManager.attributesOfItemAtPath(path, error = null) ?: return 0L
         return (attrs["NSFileSize"] as? Long) ?: 0L
-    }
-
-    companion object {
-        private const val MODEL_FILENAME = "phi-3-mini-4k-instruct-q4_k_m.gguf"
     }
 }

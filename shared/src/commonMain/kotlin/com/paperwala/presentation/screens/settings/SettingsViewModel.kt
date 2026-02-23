@@ -19,6 +19,7 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.paperwala.data.repository.UserRepository
 import com.paperwala.domain.ai.AiStatus
+import com.paperwala.domain.ai.LlmModel
 import com.paperwala.domain.ai.ModelManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,6 +28,7 @@ import kotlinx.coroutines.launch
 
 data class SettingsState(
     val enableLocalLlm: Boolean = false,
+    val selectedModel: LlmModel = LlmModel.PHI_3_MINI,
     val isModelDownloaded: Boolean = false,
     val modelSizeMb: Long = 0,
     val isDownloading: Boolean = false,
@@ -52,11 +54,13 @@ class SettingsViewModel(
 
     private fun loadSettings() {
         val prefs = userRepository.getPreferences()
-        val modelDownloaded = modelManager.isModelDownloaded()
-        val modelSizeBytes = modelManager.getModelSizeBytes()
+        val selectedModel = prefs.selectedLlmModel
+        val modelDownloaded = modelManager.isModelDownloaded(selectedModel)
+        val modelSizeBytes = modelManager.getModelSizeBytes(selectedModel)
 
         _state.value = SettingsState(
             enableLocalLlm = prefs.enableLocalLlm,
+            selectedModel = selectedModel,
             isModelDownloaded = modelDownloaded,
             modelSizeMb = modelSizeBytes / (1024 * 1024),
             aiStatus = when {
@@ -76,7 +80,14 @@ class SettingsViewModel(
         loadSettings()
     }
 
+    fun selectModel(model: LlmModel) {
+        val prefs = userRepository.getPreferences()
+        userRepository.savePreferences(prefs.copy(selectedLlmModel = model))
+        loadSettings()
+    }
+
     fun downloadModel() {
+        val model = _state.value.selectedModel
         screenModelScope.launch {
             _state.value = _state.value.copy(
                 isDownloading = true,
@@ -84,13 +95,13 @@ class SettingsViewModel(
                 downloadError = null
             )
             try {
-                modelManager.downloadModel { progress ->
+                modelManager.downloadModel(model) { progress ->
                     _state.value = _state.value.copy(downloadProgress = progress)
                 }
                 _state.value = _state.value.copy(
                     isDownloading = false,
                     isModelDownloaded = true,
-                    modelSizeMb = modelManager.getModelSizeBytes() / (1024 * 1024)
+                    modelSizeMb = modelManager.getModelSizeBytes(model) / (1024 * 1024)
                 )
                 loadSettings()
             } catch (e: Exception) {
@@ -103,7 +114,7 @@ class SettingsViewModel(
     }
 
     fun deleteModel() {
-        modelManager.deleteModel()
+        modelManager.deleteModel(_state.value.selectedModel)
         loadSettings()
     }
 }

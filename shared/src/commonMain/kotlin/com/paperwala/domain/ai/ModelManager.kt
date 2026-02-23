@@ -16,9 +16,9 @@
 package com.paperwala.domain.ai
 
 expect class ModelManager {
-    suspend fun downloadModel(onProgress: (Float) -> Unit): Boolean
-    fun getModelPath(): String?
-    fun isModelDownloaded(): Boolean
-    fun deleteModel()
-    fun getModelSizeBytes(): Long
+    suspend fun downloadModel(model: LlmModel, onProgress: (Float) -> Unit): Boolean
+    fun getModelPath(model: LlmModel): String?
+    fun isModelDownloaded(model: LlmModel): Boolean
+    fun deleteModel(model: LlmModel)
+    fun getModelSizeBytes(model: LlmModel): Long
 }
