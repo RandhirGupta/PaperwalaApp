@@ -76,11 +76,20 @@ graph LR
     subgraph UseCases["Use Cases"]
         GenEdition["GenerateMorningEdition"]
         FetchNews["FetchLatestNews"]
-        Summarize["SummarizeArticle"]
-        Score["ScoreRelevance"]
+    end
+
+    subgraph AI["AI Enhancers"]
+        Factory["ArticleEnhancerFactory"]
+        Cloud["CloudArticleEnhancer"]
+        Local["LocalArticleEnhancer"]
+        Rules["RuleBasedEnhancer"]
     end
 
     UseCases --> Models
+    GenEdition --> Factory
+    Factory --> Cloud
+    Factory --> Local
+    Factory --> Rules
 
     style Models fill:#F3E5F5,stroke:#7B1FA2,stroke-width:2px
     style UseCases fill:#EDE7F6,stroke:#512DA8,stroke-width:2px

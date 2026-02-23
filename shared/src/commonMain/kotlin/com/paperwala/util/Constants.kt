@@ -29,8 +29,6 @@ object Constants {
     const val MAX_ARTICLES_PER_SECTION = 5
     const val ARTICLE_CACHE_HOURS = 48
 
-    // LLM settings
-    const val LLM_MODEL_NAME = "phi-3-mini-4k-q4"
-    const val LLM_MIN_RAM_MB = 2000
+    // LLM settings (model-specific values are in LlmModel enum)
     const val LLM_MIN_BATTERY_PERCENT = 20
 }
