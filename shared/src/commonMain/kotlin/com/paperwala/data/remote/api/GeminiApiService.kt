@@ -28,14 +28,14 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 
-class GeminiApiService(private val httpClient: HttpClient) {
+open class GeminiApiService(private val httpClient: HttpClient) {
 
     companion object {
         private const val BASE_URL =
             "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
     }
 
-    suspend fun generateContent(
+    open suspend fun generateContent(
         apiKey: String,
         prompt: String,
         temperature: Float = 0.3f,
