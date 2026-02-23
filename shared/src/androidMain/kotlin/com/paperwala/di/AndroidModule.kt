@@ -17,6 +17,8 @@ package com.paperwala.di
 
 import com.paperwala.data.local.db.DatabaseDriverFactory
 import com.paperwala.data.sync.BackgroundSyncScheduler
+import com.paperwala.domain.ai.LocalLlmEngine
+import com.paperwala.domain.ai.ModelManager
 import com.paperwala.util.ConnectivityObserver
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
@@ -25,4 +27,6 @@ val androidModule = module {
     single { DatabaseDriverFactory(androidContext()) }
     single { ConnectivityObserver(androidContext()) }
     single { BackgroundSyncScheduler(androidContext()) }
+    single { LocalLlmEngine(androidContext()) }
+    single { ModelManager(androidContext()) }
 }

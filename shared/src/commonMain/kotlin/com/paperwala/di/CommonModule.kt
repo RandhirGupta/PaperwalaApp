@@ -15,6 +15,7 @@
  */
 package com.paperwala.di
 
+import com.paperwala.data.remote.api.GeminiApiService
 import com.paperwala.data.remote.api.GNewsApiService
 import com.paperwala.data.remote.api.NewsApiService
 import com.paperwala.data.remote.api.NewsdataApiService
@@ -23,6 +24,9 @@ import com.paperwala.data.remote.createHttpClient
 import com.paperwala.data.repository.EditionRepository
 import com.paperwala.data.repository.NewsRepository
 import com.paperwala.data.repository.UserRepository
+import com.paperwala.domain.ai.ArticleEnhancerFactory
+import com.paperwala.domain.ai.CloudArticleEnhancer
+import com.paperwala.domain.ai.RuleBasedEnhancer
 import com.paperwala.domain.usecase.GenerateMorningEditionUseCase
 import com.paperwala.util.Constants
 import org.koin.dsl.module
@@ -33,6 +37,7 @@ val networkModule = module {
     single { GNewsApiService(get()) }
     single { NewsdataApiService(get()) }
     single { RssFeedService(get()) }
+    single { GeminiApiService(get()) }
 }
 
 val repositoryModule = module {
@@ -52,14 +57,26 @@ val repositoryModule = module {
     single { EditionRepository(database = get()) }
 }
 
+val aiModule = module {
+    single { RuleBasedEnhancer() }
+    single { CloudArticleEnhancer(geminiApiService = get(), apiKey = Constants.GEMINI_API_KEY) }
+    single {
+        ArticleEnhancerFactory(
+            cloudEnhancer = get<CloudArticleEnhancer>(),
+            ruleBasedEnhancer = get()
+        )
+    }
+}
+
 val useCaseModule = module {
     factory {
         GenerateMorningEditionUseCase(
             newsRepository = get(),
             editionRepository = get(),
-            userRepository = get()
+            userRepository = get(),
+            articleEnhancerFactory = get()
         )
     }
 }
 
-val commonModules = listOf(networkModule, repositoryModule, useCaseModule)
+val commonModules = listOf(networkModule, repositoryModule, aiModule, useCaseModule)

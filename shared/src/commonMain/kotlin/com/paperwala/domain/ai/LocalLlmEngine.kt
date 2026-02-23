@@ -13,19 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.paperwala.di
+package com.paperwala.domain.ai
 
-import com.paperwala.data.local.db.DatabaseDriverFactory
-import com.paperwala.data.sync.BackgroundSyncScheduler
-import com.paperwala.domain.ai.LocalLlmEngine
-import com.paperwala.domain.ai.ModelManager
-import com.paperwala.util.ConnectivityObserver
-import org.koin.dsl.module
-
-val iosModule = module {
-    single { DatabaseDriverFactory() }
-    single { ConnectivityObserver() }
-    single { BackgroundSyncScheduler() }
-    single { LocalLlmEngine() }
-    single { ModelManager() }
+expect class LocalLlmEngine {
+    suspend fun loadModel(modelPath: String)
+    suspend fun generate(prompt: String, maxTokens: Int = 256): String
+    fun isModelLoaded(): Boolean
+    fun unloadModel()
 }

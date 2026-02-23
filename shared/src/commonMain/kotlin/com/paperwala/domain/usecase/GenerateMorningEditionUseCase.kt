@@ -18,10 +18,12 @@ package com.paperwala.domain.usecase
 import com.paperwala.data.repository.EditionRepository
 import com.paperwala.data.repository.NewsRepository
 import com.paperwala.data.repository.UserRepository
+import com.paperwala.domain.ai.ArticleEnhancerFactory
 import com.paperwala.domain.model.Article
 import com.paperwala.domain.model.Edition
 import com.paperwala.domain.model.Section
 import com.paperwala.domain.model.TopicCategory
+import com.paperwala.domain.model.UserPreferences
 import com.paperwala.util.ReadTimeCalculator
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
@@ -30,7 +32,8 @@ import kotlinx.datetime.toLocalDateTime
 class GenerateMorningEditionUseCase(
     private val newsRepository: NewsRepository,
     private val editionRepository: EditionRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val articleEnhancerFactory: ArticleEnhancerFactory? = null
 ) {
 
     suspend fun execute(forceRefresh: Boolean = false): Edition {
@@ -49,8 +52,11 @@ class GenerateMorningEditionUseCase(
         val oneDayAgo = Clock.System.now().toEpochMilliseconds() - (24 * 60 * 60 * 1000L)
         val allArticles = newsRepository.getRecentArticles(oneDayAgo)
 
+        // Enhance articles with AI (summarization + relevance scoring)
+        val enhancedArticles = enhanceArticles(allArticles, prefs)
+
         // Build sections based on user preferences
-        val sections = buildSections(allArticles, prefs.selectedTopics, prefs.readingTimeMinutes)
+        val sections = buildSections(enhancedArticles, prefs.selectedTopics, prefs.readingTimeMinutes)
 
         val now = Clock.System.now()
         val today = now.toLocalDateTime(TimeZone.currentSystemDefault()).date
@@ -72,6 +78,48 @@ class GenerateMorningEditionUseCase(
         editionRepository.saveEdition(edition)
 
         return edition
+    }
+
+    private suspend fun enhanceArticles(
+        articles: List<Article>,
+        prefs: UserPreferences
+    ): List<Article> {
+        if (articleEnhancerFactory == null) return articles
+
+        val enhancer = try {
+            articleEnhancerFactory.create(prefs)
+        } catch (e: Exception) {
+            articleEnhancerFactory.fallback()
+        }
+
+        return try {
+            val enhanced = enhancer.enhance(articles, prefs.selectedTopics)
+            enhanced.map { result ->
+                // Persist AI summary and score to DB
+                newsRepository.updateArticleSummaryAndScore(
+                    articleId = result.article.id,
+                    summary = result.aiSummary,
+                    relevanceScore = result.aiRelevanceScore
+                )
+                result.article.copy(
+                    summary = result.aiSummary,
+                    relevanceScore = result.aiRelevanceScore
+                )
+            }
+        } catch (e: Exception) {
+            // Fallback to rule-based if primary enhancer fails
+            try {
+                val fallbackResults = articleEnhancerFactory.fallback()
+                    .enhance(articles, prefs.selectedTopics)
+                fallbackResults.map { result ->
+                    result.article.copy(
+                        relevanceScore = result.aiRelevanceScore
+                    )
+                }
+            } catch (e2: Exception) {
+                articles
+            }
+        }
     }
 
     private fun buildSections(

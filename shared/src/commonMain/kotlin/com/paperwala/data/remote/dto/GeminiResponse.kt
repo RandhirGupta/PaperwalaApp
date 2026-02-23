@@ -1,0 +1,60 @@
+/*
+ * Copyright 2026 Randhir Gupta
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.paperwala.data.remote.dto
+
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class GeminiRequest(
+    val contents: List<GeminiContent>,
+    val generationConfig: GeminiGenerationConfig? = null
+)
+
+@Serializable
+data class GeminiContent(
+    val parts: List<GeminiPart>,
+    val role: String = "user"
+)
+
+@Serializable
+data class GeminiPart(
+    val text: String
+)
+
+@Serializable
+data class GeminiGenerationConfig(
+    val temperature: Float = 0.3f,
+    val maxOutputTokens: Int = 2048,
+    val responseMimeType: String = "application/json"
+)
+
+@Serializable
+data class GeminiResponse(
+    val candidates: List<GeminiCandidate> = emptyList()
+)
+
+@Serializable
+data class GeminiCandidate(
+    val content: GeminiContent? = null,
+    val finishReason: String? = null
+)
+
+@Serializable
+data class ArticleSummaryResult(
+    val index: Int,
+    val summary: String,
+    val relevanceScore: Int
+)

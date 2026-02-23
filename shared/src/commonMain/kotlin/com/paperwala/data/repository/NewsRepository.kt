@@ -137,6 +137,10 @@ class NewsRepository(
         database.articleQueries.toggleBookmark(articleId)
     }
 
+    fun updateArticleSummaryAndScore(articleId: String, summary: String, relevanceScore: Float) {
+        database.articleQueries.updateSummaryAndScore(summary, relevanceScore.toDouble(), articleId)
+    }
+
     private suspend fun fetchFromNewsApi(): List<Article> {
         return try {
             val response = newsApiService.getTopHeadlines(apiKey = newsApiKey)

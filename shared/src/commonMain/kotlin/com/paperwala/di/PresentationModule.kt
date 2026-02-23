@@ -17,6 +17,7 @@ package com.paperwala.di
 
 import com.paperwala.presentation.screens.morningedition.MorningEditionViewModel
 import com.paperwala.presentation.screens.onboarding.OnboardingViewModel
+import com.paperwala.presentation.screens.settings.SettingsViewModel
 import org.koin.dsl.module
 
 val presentationModule = module {
@@ -29,4 +30,5 @@ val presentationModule = module {
             connectivityObserver = get()
         )
     }
+    factory { SettingsViewModel(userRepository = get(), modelManager = get()) }
 }
