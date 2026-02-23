@@ -42,7 +42,7 @@ Every morning, a newspaper wala in India delivers your paper to your doorstep. Y
 
 ## Development Roadmap
 
-### [x] Phase 1: MVP Foundation
+### ✅ Phase 1: MVP Foundation
 
 - Kotlin Multiplatform project setup (Android + iOS shared module)
 - SQLDelight database schema (Articles, Editions, Reading History, User Preferences)
@@ -51,7 +51,7 @@ Every morning, a newspaper wala in India delivers your paper to your doorstep. Y
 - Onboarding flow (topic selection, source picker, reading time, delivery time)
 - Splash screen with Voyager navigation
 
-### [x] Phase 2: Morning Drop UI
+### ✅ Phase 2: Morning Drop UI
 
 - "Above the Fold" front-page layout with hero article + 2 secondary cards
 - Section-based scrolling with 3D unfold animation (`rotationX` spring)
@@ -60,7 +60,7 @@ Every morning, a newspaper wala in India delivers your paper to your doorstep. Y
 - Background sync with WorkManager (Android) / BGTaskScheduler (iOS)
 - Newspaper-inspired typography (Playfair Display, Lora, JetBrains Mono)
 
-### [x] Phase 3: AI Summaries + Model Selection
+### ✅ Phase 3: AI Summaries + Model Selection
 
 - 3-tier AI fallback chain: Local LLM → Gemini Cloud → Rule-based
 - Gemini 2.0 Flash cloud API integration (free tier, 1,500 req/day)
@@ -71,14 +71,14 @@ Every morning, a newspaper wala in India delivers your paper to your doorstep. Y
 - AI relevance scoring integrated into edition pipeline
 - 95 unit tests across 10 test classes (kotlin-test + coroutines-test)
 
-### [ ] Phase 4: Habits
+### ⬜ Phase 4: Habits
 
 - Reading streak tracking and streak dashboard
 - Push notifications for morning edition delivery
 - Article bookmarking and reading list
 - Share articles to other apps
 
-### [ ] Phase 5: Polish
+### ⬜ Phase 5: Polish
 
 - Dark mode and sepia reading mode
 - Accessibility improvements (content descriptions, font scaling)
