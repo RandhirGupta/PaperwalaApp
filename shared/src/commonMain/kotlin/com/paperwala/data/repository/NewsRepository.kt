@@ -131,10 +131,22 @@ class NewsRepository(
 
     fun markArticleAsRead(articleId: String) {
         database.articleQueries.markAsRead(articleId)
+        database.readingHistoryQueries.insertReadEvent(
+            article_id = articleId,
+            edition_id = null,
+            read_at = Clock.System.now().toEpochMilliseconds(),
+            read_duration_seconds = null
+        )
     }
 
     fun toggleBookmark(articleId: String) {
         database.articleQueries.toggleBookmark(articleId)
+    }
+
+    fun getBookmarkedArticles(): List<Article> {
+        return database.articleQueries.getBookmarkedArticles()
+            .executeAsList()
+            .map { it.toDomain() }
     }
 
     fun updateArticleSummaryAndScore(articleId: String, summary: String, relevanceScore: Float) {

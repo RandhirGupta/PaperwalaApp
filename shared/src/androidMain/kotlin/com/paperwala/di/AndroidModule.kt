@@ -20,6 +20,8 @@ import com.paperwala.data.sync.BackgroundSyncScheduler
 import com.paperwala.domain.ai.LocalLlmEngine
 import com.paperwala.domain.ai.ModelManager
 import com.paperwala.util.ConnectivityObserver
+import com.paperwala.util.NotificationManager
+import com.paperwala.util.ShareManager
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
@@ -29,4 +31,6 @@ val androidModule = module {
     single { BackgroundSyncScheduler(androidContext()) }
     single { LocalLlmEngine(androidContext()) }
     single { ModelManager(androidContext()) }
+    single { ShareManager(androidContext()) }
+    single { NotificationManager(androidContext()) }
 }

@@ -15,9 +15,12 @@
  */
 package com.paperwala.di
 
+import com.paperwala.presentation.screens.articledetail.ArticleDetailViewModel
+import com.paperwala.presentation.screens.bookmarks.BookmarksViewModel
 import com.paperwala.presentation.screens.morningedition.MorningEditionViewModel
 import com.paperwala.presentation.screens.onboarding.OnboardingViewModel
 import com.paperwala.presentation.screens.settings.SettingsViewModel
+import com.paperwala.presentation.screens.streaks.StreakDashboardViewModel
 import org.koin.dsl.module
 
 val presentationModule = module {
@@ -27,8 +30,19 @@ val presentationModule = module {
             generateEditionUseCase = get(),
             newsRepository = get(),
             userRepository = get(),
-            connectivityObserver = get()
+            connectivityObserver = get(),
+            readingStreakRepository = get()
         )
     }
-    factory { SettingsViewModel(userRepository = get(), modelManager = get()) }
+    factory {
+        SettingsViewModel(
+            userRepository = get(),
+            modelManager = get(),
+            notificationManager = get(),
+            syncScheduler = get()
+        )
+    }
+    factory { BookmarksViewModel(newsRepository = get()) }
+    factory { StreakDashboardViewModel(readingStreakRepository = get()) }
+    factory { ArticleDetailViewModel(newsRepository = get(), shareManager = get()) }
 }

@@ -20,6 +20,8 @@ import com.paperwala.data.sync.BackgroundSyncScheduler
 import com.paperwala.domain.ai.LocalLlmEngine
 import com.paperwala.domain.ai.ModelManager
 import com.paperwala.util.ConnectivityObserver
+import com.paperwala.util.NotificationManager
+import com.paperwala.util.ShareManager
 import org.koin.dsl.module
 
 val iosModule = module {
@@ -28,4 +30,6 @@ val iosModule = module {
     single { BackgroundSyncScheduler() }
     single { LocalLlmEngine() }
     single { ModelManager() }
+    single { ShareManager() }
+    single { NotificationManager() }
 }

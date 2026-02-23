@@ -124,10 +124,27 @@ class SettingsScreen : Screen {
                 value = "${state.deliveryTimeHour}:00"
             )
 
-            SettingsRow(
-                label = "Notifications",
-                value = if (state.enableNotifications) "On" else "Off"
-            )
+            // Notifications toggle
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Notifications",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.weight(1f)
+                )
+                Switch(
+                    checked = state.enableNotifications,
+                    onCheckedChange = { viewModel.toggleNotifications(it) },
+                    colors = SwitchDefaults.colors(
+                        checkedTrackColor = PaperwalaColors.MastheadRed
+                    )
+                )
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 

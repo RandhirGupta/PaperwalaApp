@@ -18,6 +18,7 @@ package com.paperwala.presentation.screens.morningedition
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.paperwala.data.repository.NewsRepository
+import com.paperwala.data.repository.ReadingStreakRepository
 import com.paperwala.data.repository.UserRepository
 import com.paperwala.domain.model.Edition
 import com.paperwala.domain.usecase.GenerateMorningEditionUseCase
@@ -35,14 +36,16 @@ data class MorningEditionState(
     val isLoading: Boolean = true,
     val error: String? = null,
     val userName: String = "",
-    val isOffline: Boolean = false
+    val isOffline: Boolean = false,
+    val currentStreak: Int = 0
 )
 
 class MorningEditionViewModel(
     private val generateEditionUseCase: GenerateMorningEditionUseCase,
     private val newsRepository: NewsRepository,
     private val userRepository: UserRepository,
-    private val connectivityObserver: ConnectivityObserver
+    private val connectivityObserver: ConnectivityObserver,
+    private val readingStreakRepository: ReadingStreakRepository
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(MorningEditionState())
@@ -50,6 +53,7 @@ class MorningEditionViewModel(
 
     init {
         loadEdition()
+        loadStreak()
         observeConnectivity()
     }
 
@@ -61,6 +65,13 @@ class MorningEditionViewModel(
                 )
             }
             .launchIn(screenModelScope)
+    }
+
+    private fun loadStreak() {
+        screenModelScope.launch {
+            val streak = readingStreakRepository.getReadingStreak()
+            _state.value = _state.value.copy(currentStreak = streak.currentStreak)
+        }
     }
 
     fun loadEdition(forceRefresh: Boolean = false) {
@@ -83,6 +94,7 @@ class MorningEditionViewModel(
 
     fun markArticleAsRead(articleId: String) {
         newsRepository.markArticleAsRead(articleId)
+        loadStreak() // Refresh streak after reading
     }
 
     fun refresh() {

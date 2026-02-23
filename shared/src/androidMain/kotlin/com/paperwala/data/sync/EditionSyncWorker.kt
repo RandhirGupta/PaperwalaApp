@@ -18,7 +18,9 @@ package com.paperwala.data.sync
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.paperwala.data.repository.UserRepository
 import com.paperwala.domain.usecase.GenerateMorningEditionUseCase
+import com.paperwala.util.NotificationManager
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -28,10 +30,16 @@ class EditionSyncWorker(
 ) : CoroutineWorker(context, params), KoinComponent {
 
     private val generateEditionUseCase: GenerateMorningEditionUseCase by inject()
+    private val userRepository: UserRepository by inject()
+    private val notificationManager: NotificationManager by inject()
 
     override suspend fun doWork(): Result {
         return try {
-            generateEditionUseCase.execute(forceRefresh = true)
+            val edition = generateEditionUseCase.execute(forceRefresh = true)
+            val prefs = userRepository.getPreferences()
+            if (prefs.enableNotifications) {
+                notificationManager.showEditionReady(edition.articleCount)
+            }
             Result.success()
         } catch (e: Exception) {
             if (runAttemptCount < 3) Result.retry() else Result.failure()

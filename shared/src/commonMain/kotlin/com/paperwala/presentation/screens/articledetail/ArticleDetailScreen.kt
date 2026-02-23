@@ -23,13 +23,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -42,6 +43,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,6 +54,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import coil3.compose.AsyncImage
@@ -66,6 +71,12 @@ class ArticleDetailScreen(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
+        val viewModel = koinScreenModel<ArticleDetailViewModel>()
+        val isBookmarked by viewModel.isBookmarked.collectAsState()
+
+        LaunchedEffect(Unit) {
+            viewModel.init(article.isBookmarked)
+        }
 
         Scaffold(
             topBar = {
@@ -86,7 +97,20 @@ class ArticleDetailScreen(
                         }
                     },
                     actions = {
-                        IconButton(onClick = { /* TODO: Share */ }) {
+                        IconButton(onClick = { viewModel.toggleBookmark(article.id) }) {
+                            Icon(
+                                if (isBookmarked) Icons.Default.Bookmark
+                                else Icons.Default.BookmarkBorder,
+                                contentDescription = if (isBookmarked) "Remove bookmark" else "Bookmark",
+                                tint = if (isBookmarked) PaperwalaColors.MastheadRed
+                                else MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                        IconButton(
+                            onClick = {
+                                viewModel.shareArticle(article.title, article.sourceUrl)
+                            }
+                        ) {
                             Icon(Icons.Default.Share, contentDescription = "Share")
                         }
                     },

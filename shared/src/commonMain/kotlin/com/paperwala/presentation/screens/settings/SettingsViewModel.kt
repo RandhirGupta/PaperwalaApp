@@ -18,9 +18,11 @@ package com.paperwala.presentation.screens.settings
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.paperwala.data.repository.UserRepository
+import com.paperwala.data.sync.BackgroundSyncScheduler
 import com.paperwala.domain.ai.AiStatus
 import com.paperwala.domain.ai.LlmModel
 import com.paperwala.domain.ai.ModelManager
+import com.paperwala.util.NotificationManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -42,7 +44,9 @@ data class SettingsState(
 
 class SettingsViewModel(
     private val userRepository: UserRepository,
-    private val modelManager: ModelManager
+    private val modelManager: ModelManager,
+    private val notificationManager: NotificationManager,
+    private val syncScheduler: BackgroundSyncScheduler
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(SettingsState())
@@ -83,6 +87,22 @@ class SettingsViewModel(
     fun selectModel(model: LlmModel) {
         val prefs = userRepository.getPreferences()
         userRepository.savePreferences(prefs.copy(selectedLlmModel = model))
+        loadSettings()
+    }
+
+    fun toggleNotifications(enabled: Boolean) {
+        if (enabled) {
+            notificationManager.requestPermission()
+        }
+        val prefs = userRepository.getPreferences()
+        userRepository.savePreferences(prefs.copy(enableNotifications = enabled))
+        loadSettings()
+    }
+
+    fun updateDeliveryTime(hour: Int) {
+        val prefs = userRepository.getPreferences()
+        userRepository.savePreferences(prefs.copy(deliveryTimeHour = hour))
+        syncScheduler.scheduleEditionSync(hour)
         loadSettings()
     }
 

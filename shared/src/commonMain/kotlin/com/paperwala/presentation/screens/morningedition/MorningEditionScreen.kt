@@ -34,8 +34,13 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -72,7 +77,11 @@ import com.paperwala.presentation.components.CompactArticleCard
 import com.paperwala.presentation.components.NewspaperDivider
 import com.paperwala.presentation.components.OfflineBanner
 import com.paperwala.presentation.components.SectionHeader
+import com.paperwala.presentation.components.StreakBadge
 import com.paperwala.presentation.screens.articledetail.ArticleDetailScreen
+import com.paperwala.presentation.screens.bookmarks.BookmarksScreen
+import com.paperwala.presentation.screens.settings.SettingsScreen
+import com.paperwala.presentation.screens.streaks.StreakDashboardScreen
 import com.paperwala.presentation.theme.PaperwalaColors
 import com.paperwala.util.ReadTimeCalculator
 import kotlinx.datetime.Clock
@@ -101,9 +110,19 @@ class MorningEditionScreen : Screen {
                     state.error != null && state.edition == null -> ErrorState(state.error!!)
                     state.edition != null -> EditionContent(
                         edition = state.edition!!,
+                        currentStreak = state.currentStreak,
                         onArticleClick = { article ->
                             viewModel.markArticleAsRead(article.id)
                             navigator.push(ArticleDetailScreen(article))
+                        },
+                        onStreakClick = {
+                            navigator.push(StreakDashboardScreen())
+                        },
+                        onBookmarksClick = {
+                            navigator.push(BookmarksScreen())
+                        },
+                        onSettingsClick = {
+                            navigator.push(SettingsScreen())
                         }
                     )
                 }
@@ -151,7 +170,11 @@ private fun ErrorState(message: String) {
 @Composable
 private fun EditionContent(
     edition: Edition,
-    onArticleClick: (Article) -> Unit
+    currentStreak: Int,
+    onArticleClick: (Article) -> Unit,
+    onStreakClick: () -> Unit,
+    onBookmarksClick: () -> Unit,
+    onSettingsClick: () -> Unit
 ) {
     val scrollState = rememberLazyListState()
     val visibleSections = remember { mutableStateListOf<Int>() }
@@ -183,6 +206,10 @@ private fun EditionContent(
         item {
             NewspaperMasthead(
                 edition = edition,
+                currentStreak = currentStreak,
+                onStreakClick = onStreakClick,
+                onBookmarksClick = onBookmarksClick,
+                onSettingsClick = onSettingsClick,
                 modifier = Modifier.mastheadEntrance()
             )
         }
@@ -223,6 +250,10 @@ private fun EditionContent(
 @Composable
 private fun NewspaperMasthead(
     edition: Edition,
+    currentStreak: Int,
+    onStreakClick: () -> Unit,
+    onBookmarksClick: () -> Unit,
+    onSettingsClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
@@ -238,6 +269,34 @@ private fun NewspaperMasthead(
             .padding(horizontal = 16.dp, vertical = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Action row: streak badge | bookmarks | settings
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            StreakBadge(
+                currentStreak = currentStreak,
+                onClick = onStreakClick
+            )
+            Row {
+                IconButton(onClick = onBookmarksClick) {
+                    Icon(
+                        Icons.Default.BookmarkBorder,
+                        contentDescription = "Bookmarks",
+                        tint = PaperwalaColors.InkGray
+                    )
+                }
+                IconButton(onClick = onSettingsClick) {
+                    Icon(
+                        Icons.Default.Settings,
+                        contentDescription = "Settings",
+                        tint = PaperwalaColors.InkGray
+                    )
+                }
+            }
+        }
+
         Text(
             text = "PAPERWALA",
             style = MaterialTheme.typography.displayLarge,

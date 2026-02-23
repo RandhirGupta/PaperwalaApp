@@ -23,6 +23,7 @@ import com.paperwala.data.remote.api.RssFeedService
 import com.paperwala.data.remote.createHttpClient
 import com.paperwala.data.repository.EditionRepository
 import com.paperwala.data.repository.NewsRepository
+import com.paperwala.data.repository.ReadingStreakRepository
 import com.paperwala.data.repository.UserRepository
 import com.paperwala.domain.ai.ArticleEnhancerFactory
 import com.paperwala.domain.ai.CloudArticleEnhancer
@@ -55,6 +56,7 @@ val repositoryModule = module {
     }
     single { UserRepository(database = get()) }
     single { EditionRepository(database = get()) }
+    single { ReadingStreakRepository(database = get()) }
 }
 
 val aiModule = module {

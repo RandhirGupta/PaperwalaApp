@@ -15,7 +15,9 @@
  */
 package com.paperwala.data.sync
 
+import com.paperwala.data.repository.UserRepository
 import com.paperwala.domain.usecase.GenerateMorningEditionUseCase
+import com.paperwala.util.NotificationManager
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
@@ -24,12 +26,18 @@ import org.koin.core.component.inject
 object SyncHelper : KoinComponent {
     private val generateEditionUseCase: GenerateMorningEditionUseCase by inject()
     private val syncScheduler: BackgroundSyncScheduler by inject()
+    private val userRepository: UserRepository by inject()
+    private val notificationManager: NotificationManager by inject()
     private val scope = MainScope()
 
     fun performSync(completion: (Boolean) -> Unit) {
         scope.launch {
             try {
-                generateEditionUseCase.execute(forceRefresh = true)
+                val edition = generateEditionUseCase.execute(forceRefresh = true)
+                val prefs = userRepository.getPreferences()
+                if (prefs.enableNotifications) {
+                    notificationManager.showEditionReady(edition.articleCount)
+                }
                 completion(true)
             } catch (e: Exception) {
                 completion(false)
