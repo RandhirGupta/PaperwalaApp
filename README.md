@@ -15,7 +15,7 @@ Every morning, a newspaper wala in India delivers your paper to your doorstep. Y
 - **Morning Edition** — A new "edition" is curated and ready each morning at your preferred time
 - **Above the Fold** — Top 3 headlines presented like a real newspaper front page
 - **Sections Unfold** — Scroll down and sections (Technology, Sports, Business...) unfold with a 3D newspaper animation
-- **AI Summaries** — Each article is summarized to 2-3 sentences by an on-device LLM
+- **AI Summaries** — Each article is summarized to 2-3 sentences (Gemini cloud API or your choice of on-device LLM)
 - **Your Interests** — News is scored and ranked based on topics you chose during onboarding
 - **Reading Streaks** — Build a daily reading habit with streak tracking
 
@@ -34,7 +34,8 @@ Every morning, a newspaper wala in India delivers your paper to your doorstep. Y
 | **DI** | Koin 4.0.2 |
 | **Navigation** | Voyager 1.1.0 |
 | **Images** | Coil 3.1.0 |
-| **Local LLM** | llama.cpp (Phi-3-mini Q4) |
+| **Cloud AI** | Gemini 2.0 Flash (free tier) |
+| **Local LLM** | llama.cpp (Phi-3-mini, Llama 3.2, Gemma 2) |
 | **Animations** | Compose Animation + Compottie |
 
 ---
@@ -42,8 +43,8 @@ Every morning, a newspaper wala in India delivers your paper to your doorstep. Y
 ## Development Roadmap
 
 - [x] **Phase 1: MVP Foundation** — Project setup, data layer, basic UI, onboarding
-- [ ] **Phase 2: Morning Drop UI** — Lottie animations, multi-source RSS, background sync
-- [ ] **Phase 3: Local LLM** — On-device summarization, relevance scoring, cloud fallback
+- [x] **Phase 2: Morning Drop UI** — Lottie animations, multi-source RSS, background sync
+- [x] **Phase 3: AI Summaries** — Gemini cloud API, on-device LLM (user-selectable model), relevance scoring, 3-tier fallback
 - [ ] **Phase 4: Habits** — Reading streaks, notifications, bookmarks, share
 - [ ] **Phase 5: Polish** — Dark/sepia mode, accessibility, app store release
 
@@ -71,6 +72,7 @@ Every morning, a newspaper wala in India delivers your paper to your doorstep. Y
    ```kotlin
    const val NEWS_API_KEY = "your-newsapi-key"
    const val GNEWS_API_KEY = "your-gnews-key"
+   const val GEMINI_API_KEY = "your-gemini-key"  // optional, for AI summaries
    ```
 
 4. Sync Gradle and run on emulator/device

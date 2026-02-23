@@ -183,11 +183,11 @@ flowchart TD
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': {'fontSize': '18px'}}}%%
 flowchart LR
-    Input["Raw Articles"] --> Guard{"Battery > 20%?<br/>RAM > 2GB?"}
+    Input["Raw Articles"] --> Guard{"Battery > 20%?<br/>RAM OK?"}
 
-    Guard -- Yes --> Local["LOCAL LLM<br/>Phi-3-mini Q4<br/>~2.3 GB on device"]
-    Guard -- No --> Cloud["CLOUD API<br/>Claude Haiku"]
-    Cloud -- Fails --> Rules["RULE-BASED<br/>Keyword + Recency"]
+    Guard -- Yes --> Local["LOCAL LLM<br/>User-selected model<br/>on device"]
+    Guard -- No --> Cloud["CLOUD API<br/>Gemini 2.0 Flash"]
+    Cloud -- Fails --> Rules["RULE-BASED<br/>Extractive + Scoring"]
 
     Local --> Output["Scored &<br/>Summarized"]
     Cloud --> Output
@@ -198,6 +198,19 @@ flowchart LR
     style Rules fill:#FFF3E0,stroke:#E65100,stroke-width:2px
     style Output fill:#F3E5F5,stroke:#7B1FA2,stroke-width:2px
 ```
+
+### Available On-Device Models
+
+Users can choose from 4 GGUF-quantized (Q4_K_M) models in Settings:
+
+| Model | Size | Speed | Quality | RAM Required |
+| --- | --- | --- | --- | --- |
+| **Phi-3-mini** (default) | 2.3 GB | ~8 tok/s | Best quality | 3.5 GB |
+| **Llama 3.2 3B** | 1.9 GB | ~12 tok/s | Fast + good | 3.0 GB |
+| **Llama 3.2 1B** | 0.8 GB | ~30 tok/s | Fastest, basic | 1.5 GB |
+| **Gemma 2 2B** | 1.5 GB | ~16 tok/s | Balanced | 2.5 GB |
+
+The `LlmModel` enum in `domain/ai/LlmModel.kt` defines download URLs, file names, sizes, and RAM requirements. Selection is persisted in `UserPreferences` (SQLite `selected_llm_model` column).
 
 ---
 
@@ -246,6 +259,8 @@ erDiagram
         TEXT preferred_sources
         INTEGER reading_time_minutes
         INTEGER delivery_time_hour
+        INTEGER enable_local_llm
+        TEXT selected_llm_model
     }
 
     EditionEntity ||--o{ EditionArticleEntity : has
@@ -404,8 +419,8 @@ Each section **unfolds with a 3D animation** (`graphicsLayer { rotationX }` with
 | **Async** | kotlinx.coroutines | 1.9.0 |
 | **Date/Time** | kotlinx.datetime | 0.6.1 |
 | **Local LLM** | llama.cpp bindings | - |
-| **LLM Model** | Phi-3-mini Q4_K_M | ~2.3 GB |
-| **Fallback** | Claude Haiku API | - |
+| **LLM Models** | Phi-3-mini, Llama 3.2, Gemma 2 (Q4_K_M GGUF) | 0.8-2.3 GB |
+| **Cloud API** | Gemini 2.0 Flash (free tier) | - |
 | **Animations** | Compose Animation | - |
 | **Lottie** | Compottie | 2.0.0-rc01 |
 | **Fonts** | Playfair Display, Lora, JetBrains Mono | - |
