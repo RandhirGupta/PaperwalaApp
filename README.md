@@ -42,11 +42,48 @@ Every morning, a newspaper wala in India delivers your paper to your doorstep. Y
 
 ## Development Roadmap
 
-- [x] **Phase 1: MVP Foundation** — Project setup, data layer, basic UI, onboarding
-- [x] **Phase 2: Morning Drop UI** — Lottie animations, multi-source RSS, background sync
-- [x] **Phase 3: AI Summaries** — Gemini cloud API, on-device LLM (user-selectable model), relevance scoring, 3-tier fallback
-- [ ] **Phase 4: Habits** — Reading streaks, notifications, bookmarks, share
-- [ ] **Phase 5: Polish** — Dark/sepia mode, accessibility, app store release
+### [x] Phase 1: MVP Foundation
+
+- Kotlin Multiplatform project setup (Android + iOS shared module)
+- SQLDelight database schema (Articles, Editions, Reading History, User Preferences)
+- 4 news API integrations (NewsAPI, GNews, Newsdata, RSS feeds)
+- ArticleMapper with deduplication and category inference
+- Onboarding flow (topic selection, source picker, reading time, delivery time)
+- Splash screen with Voyager navigation
+
+### [x] Phase 2: Morning Drop UI
+
+- "Above the Fold" front-page layout with hero article + 2 secondary cards
+- Section-based scrolling with 3D unfold animation (`rotationX` spring)
+- Lottie "Morning Drop" delivery animation (Compottie)
+- Multi-source RSS feed parsing (The Hindu, Indian Express, NDTV, BBC, Reuters)
+- Background sync with WorkManager (Android) / BGTaskScheduler (iOS)
+- Newspaper-inspired typography (Playfair Display, Lora, JetBrains Mono)
+
+### [x] Phase 3: AI Summaries + Model Selection
+
+- 3-tier AI fallback chain: Local LLM → Gemini Cloud → Rule-based
+- Gemini 2.0 Flash cloud API integration (free tier, 1,500 req/day)
+- Extractive rule-based summarizer with word-frequency scoring
+- On-device LLM via llama.cpp (expect/actual for Android JNI + iOS cinterop)
+- 4 user-selectable GGUF models (Phi-3-mini, Llama 3.2 3B, Llama 3.2 1B, Gemma 2 2B)
+- Settings screen with model picker, download progress, and AI status indicator
+- AI relevance scoring integrated into edition pipeline
+- 95 unit tests across 10 test classes (kotlin-test + coroutines-test)
+
+### [ ] Phase 4: Habits
+
+- Reading streak tracking and streak dashboard
+- Push notifications for morning edition delivery
+- Article bookmarking and reading list
+- Share articles to other apps
+
+### [ ] Phase 5: Polish
+
+- Dark mode and sepia reading mode
+- Accessibility improvements (content descriptions, font scaling)
+- Performance optimization and offline-first refinements
+- App store release (Google Play + App Store)
 
 ---
 
