@@ -7,6 +7,9 @@ CREATE TABLE ReadingHistoryEntity (
     FOREIGN KEY (article_id) REFERENCES ArticleEntity(id)
 );
 
+CREATE INDEX IF NOT EXISTS idx_reading_history_article_id ON ReadingHistoryEntity(article_id);
+CREATE INDEX IF NOT EXISTS idx_reading_history_read_at ON ReadingHistoryEntity(read_at);
+
 insertReadEvent:
 INSERT INTO ReadingHistoryEntity(article_id, edition_id, read_at, read_duration_seconds)
 VALUES (?, ?, ?, ?);

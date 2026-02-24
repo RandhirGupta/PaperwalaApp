@@ -23,20 +23,20 @@ Every morning, a newspaper wala in India delivers your paper to your doorstep. Y
 
 ## Tech Stack
 
-| Layer | Technology |
-| --- | --- |
-| **Language** | Kotlin 2.1.10 |
-| **Framework** | Kotlin Multiplatform (KMP) |
-| **UI** | Compose Multiplatform 1.7.3 |
-| **Platforms** | Android (API 26+) · iOS (15+) |
-| **Networking** | Ktor 3.1.0 |
-| **Database** | SQLDelight 2.0.2 |
-| **DI** | Koin 4.0.2 |
-| **Navigation** | Voyager 1.1.0 |
-| **Images** | Coil 3.1.0 |
-| **Cloud AI** | Gemini 2.0 Flash (free tier) |
-| **Local LLM** | llama.cpp (Phi-3-mini, Llama 3.2, Gemma 2) |
-| **Animations** | Compose Animation + Compottie |
+| Layer          | Technology                                 |
+|----------------|--------------------------------------------|
+| **Language**   | Kotlin 2.1.10                              |
+| **Framework**  | Kotlin Multiplatform (KMP)                 |
+| **UI**         | Compose Multiplatform 1.7.3                |
+| **Platforms**  | Android (API 26+) · iOS (15+)              |
+| **Networking** | Ktor 3.1.0                                 |
+| **Database**   | SQLDelight 2.0.2                           |
+| **DI**         | Koin 4.0.2                                 |
+| **Navigation** | Voyager 1.1.0                              |
+| **Images**     | Coil 3.1.0                                 |
+| **Cloud AI**   | Gemini 2.0 Flash (free tier)               |
+| **Local LLM**  | llama.cpp (Phi-3-mini, Llama 3.2, Gemma 2) |
+| **Animations** | Compose Animation + Compottie              |
 
 ---
 

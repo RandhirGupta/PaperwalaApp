@@ -15,19 +15,19 @@
  */
 package com.paperwala.domain.model
 
-import com.paperwala.domain.ai.LlmModel
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class UserPreferences(
-    val selectedTopics: List<TopicCategory> = emptyList(),
-    val preferredSources: List<String> = emptyList(),
-    val readingTimeMinutes: Int = 10,
-    val deliveryTimeHour: Int = 7,
-    val hasCompletedOnboarding: Boolean = false,
-    val enableNotifications: Boolean = true,
-    val enableLocalLlm: Boolean = false,
-    val selectedLlmModel: LlmModel = LlmModel.PHI_3_MINI,
-    val themeMode: ThemeMode = ThemeMode.SYSTEM,
-    val fontScale: Float = 1.0f
-)
+enum class ThemeMode(val displayName: String) {
+    SYSTEM("System"),
+    LIGHT("Light"),
+    DARK("Dark"),
+    SEPIA("Sepia");
+
+    companion object {
+        fun fromString(value: String): ThemeMode {
+            return entries.firstOrNull { it.name.equals(value, ignoreCase = true) }
+                ?: SYSTEM
+        }
+    }
+}

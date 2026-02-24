@@ -56,6 +56,11 @@ object PaperwalaColors {
     // Sepia reading mode
     val SepiaBackground = Color(0xFFF4ECD8)
     val SepiaText = Color(0xFF5B4636)
+    val SepiaSurface = Color(0xFFF8F0DC)
+    val SepiaCard = Color(0xFFFFF8E8)
+    val SepiaDivider = Color(0xFFD4C4A0)
+    val SepiaAccent = Color(0xFF8B6914)
+    val SepiaLightText = Color(0xFF7A6B52)
 }
 
 fun categoryColor(category: String): Color {

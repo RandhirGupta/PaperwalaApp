@@ -20,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import com.paperwala.domain.model.ThemeMode
 
 private val LightColorScheme = lightColorScheme(
     primary = PaperwalaColors.MastheadRed,
@@ -52,16 +53,46 @@ private val DarkColorScheme = darkColorScheme(
     error = PaperwalaColors.MastheadRed.copy(alpha = 0.85f)
 )
 
+private val SepiaColorScheme = lightColorScheme(
+    primary = PaperwalaColors.SepiaAccent,
+    onPrimary = PaperwalaColors.SepiaCard,
+    primaryContainer = PaperwalaColors.SepiaAccent.copy(alpha = 0.12f),
+    secondary = PaperwalaColors.SepiaAccent,
+    onSecondary = PaperwalaColors.SepiaCard,
+    background = PaperwalaColors.SepiaBackground,
+    onBackground = PaperwalaColors.SepiaText,
+    surface = PaperwalaColors.SepiaSurface,
+    onSurface = PaperwalaColors.SepiaText,
+    surfaceVariant = PaperwalaColors.SepiaCard,
+    onSurfaceVariant = PaperwalaColors.SepiaLightText,
+    outline = PaperwalaColors.SepiaDivider,
+    error = PaperwalaColors.MastheadRed
+)
+
 @Composable
 fun PaperwalaTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    themeMode: ThemeMode = ThemeMode.SYSTEM,
+    fontScale: Float = 1.0f,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    val systemDark = isSystemInDarkTheme()
+    val colorScheme = when (themeMode) {
+        ThemeMode.SYSTEM -> if (systemDark) DarkColorScheme else LightColorScheme
+        ThemeMode.LIGHT -> LightColorScheme
+        ThemeMode.DARK -> DarkColorScheme
+        ThemeMode.SEPIA -> SepiaColorScheme
+    }
+
+    val baseTypography = NewspaperTypography()
+    val typography = if (fontScale != 1.0f) {
+        scaleTypography(baseTypography, fontScale)
+    } else {
+        baseTypography
+    }
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = NewspaperTypography(),
+        typography = typography,
         content = content
     )
 }

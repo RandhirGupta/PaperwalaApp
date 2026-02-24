@@ -17,6 +17,7 @@ package com.paperwala.presentation.screens.morningedition
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -229,7 +230,7 @@ private fun EditionContent(
         item { NewspaperDivider() }
 
         // Remaining sections with unfold animation
-        itemsIndexed(remainingSections) { index, section ->
+        itemsIndexed(remainingSections, key = { _, section -> section.category.name }) { index, section ->
             val hasAppeared = index in visibleSections
 
             SectionWithUnfold(
@@ -397,8 +398,8 @@ private fun HeroArticle(article: Article, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
+            .clickable(onClick = onClick)
             .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(0.dp)
     ) {
         if (article.imageUrl != null) {
             AsyncImage(
@@ -463,6 +464,7 @@ private fun SubArticle(
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(8.dp))
+            .clickable(onClick = onClick)
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .padding(10.dp)
     ) {
@@ -531,7 +533,7 @@ private fun SectionWithUnfold(
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            itemsIndexed(section.articles) { articleIndex, article ->
+            itemsIndexed(section.articles, key = { _, article -> article.id }) { articleIndex, article ->
                 CompactArticleCard(
                     article = article,
                     onClick = { onArticleClick(article) },

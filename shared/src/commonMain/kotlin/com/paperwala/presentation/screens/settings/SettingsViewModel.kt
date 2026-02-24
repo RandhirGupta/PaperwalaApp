@@ -22,6 +22,7 @@ import com.paperwala.data.sync.BackgroundSyncScheduler
 import com.paperwala.domain.ai.AiStatus
 import com.paperwala.domain.ai.LlmModel
 import com.paperwala.domain.ai.ModelManager
+import com.paperwala.domain.model.ThemeMode
 import com.paperwala.util.NotificationManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -39,7 +40,9 @@ data class SettingsState(
     val aiStatus: AiStatus = AiStatus.RULE_BASED,
     val readingTimeMinutes: Int = 10,
     val deliveryTimeHour: Int = 7,
-    val enableNotifications: Boolean = true
+    val enableNotifications: Boolean = true,
+    val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val fontScale: Float = 1.0f
 )
 
 class SettingsViewModel(
@@ -74,7 +77,9 @@ class SettingsViewModel(
             },
             readingTimeMinutes = prefs.readingTimeMinutes,
             deliveryTimeHour = prefs.deliveryTimeHour,
-            enableNotifications = prefs.enableNotifications
+            enableNotifications = prefs.enableNotifications,
+            themeMode = prefs.themeMode,
+            fontScale = prefs.fontScale
         )
     }
 
@@ -135,6 +140,18 @@ class SettingsViewModel(
 
     fun deleteModel() {
         modelManager.deleteModel(_state.value.selectedModel)
+        loadSettings()
+    }
+
+    fun setThemeMode(mode: ThemeMode) {
+        val prefs = userRepository.getPreferences()
+        userRepository.savePreferences(prefs.copy(themeMode = mode))
+        loadSettings()
+    }
+
+    fun setFontScale(scale: Float) {
+        val prefs = userRepository.getPreferences()
+        userRepository.savePreferences(prefs.copy(fontScale = scale))
         loadSettings()
     }
 }

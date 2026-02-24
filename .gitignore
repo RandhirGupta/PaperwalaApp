@@ -57,6 +57,7 @@ Thumbs.db
 secrets.properties
 
 ### KMP ###
+.kotlin/
 shared/build/
 androidApp/build/
 iosApp/build/

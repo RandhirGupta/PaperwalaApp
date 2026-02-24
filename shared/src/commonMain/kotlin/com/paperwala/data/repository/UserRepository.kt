@@ -17,6 +17,7 @@ package com.paperwala.data.repository
 
 import com.paperwala.data.local.db.PaperwalaDatabase
 import com.paperwala.domain.ai.LlmModel
+import com.paperwala.domain.model.ThemeMode
 import com.paperwala.domain.model.TopicCategory
 import com.paperwala.domain.model.UserPreferences
 
@@ -41,7 +42,9 @@ class UserRepository(
             hasCompletedOnboarding = entity.has_completed_onboarding == 1L,
             enableNotifications = entity.enable_notifications == 1L,
             enableLocalLlm = entity.enable_local_llm == 1L,
-            selectedLlmModel = LlmModel.fromString(entity.selected_llm_model)
+            selectedLlmModel = LlmModel.fromString(entity.selected_llm_model),
+            themeMode = ThemeMode.fromString(entity.theme_mode),
+            fontScale = entity.font_scale.toFloat()
         )
     }
 
@@ -54,7 +57,9 @@ class UserRepository(
             has_completed_onboarding = if (prefs.hasCompletedOnboarding) 1L else 0L,
             enable_notifications = if (prefs.enableNotifications) 1L else 0L,
             enable_local_llm = if (prefs.enableLocalLlm) 1L else 0L,
-            selected_llm_model = prefs.selectedLlmModel.name
+            selected_llm_model = prefs.selectedLlmModel.name,
+            theme_mode = prefs.themeMode.name,
+            font_scale = prefs.fontScale.toDouble()
         )
     }
 

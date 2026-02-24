@@ -172,21 +172,21 @@ class ArticleDetailScreen(
                         Text(
                             text = article.sourceName,
                             style = MaterialTheme.typography.labelLarge,
-                            color = PaperwalaColors.InkGray,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontWeight = FontWeight.Bold
                         )
                         if (article.author != null) {
                             Text(
                                 text = " \u00b7 ${article.author}",
                                 style = MaterialTheme.typography.labelMedium,
-                                color = PaperwalaColors.InkLightGray
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                         Spacer(modifier = Modifier.weight(1f))
                         Text(
                             text = ReadTimeCalculator.formatReadTime(article.readTimeMinutes),
                             style = MaterialTheme.typography.labelMedium,
-                            color = PaperwalaColors.InkLightGray
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
@@ -194,7 +194,7 @@ class ArticleDetailScreen(
 
                     HorizontalDivider(
                         thickness = 1.dp,
-                        color = PaperwalaColors.DividerColor
+                        color = MaterialTheme.colorScheme.outline
                     )
 
                     Spacer(modifier = Modifier.height(20.dp))
@@ -204,7 +204,7 @@ class ArticleDetailScreen(
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(8.dp),
-                            color = PaperwalaColors.PaperCream
+                            color = MaterialTheme.colorScheme.surfaceVariant
                         ) {
                             Row(modifier = Modifier.padding(16.dp)) {
                                 // Accent bar
@@ -219,14 +219,14 @@ class ArticleDetailScreen(
                                     Text(
                                         text = "AI SUMMARY",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = PaperwalaColors.InkLightGray,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         fontWeight = FontWeight.Bold
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
                                         text = article.summary,
                                         style = MaterialTheme.typography.bodyLarge,
-                                        color = PaperwalaColors.InkDarkGray,
+                                        color = MaterialTheme.colorScheme.onSurface,
                                         fontStyle = FontStyle.Italic
                                     )
                                 }

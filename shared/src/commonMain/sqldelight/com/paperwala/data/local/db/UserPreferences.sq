@@ -7,7 +7,9 @@ CREATE TABLE UserPreferencesEntity (
     has_completed_onboarding INTEGER NOT NULL DEFAULT 0,
     enable_notifications INTEGER NOT NULL DEFAULT 1,
     enable_local_llm INTEGER NOT NULL DEFAULT 0,
-    selected_llm_model TEXT NOT NULL DEFAULT 'PHI_3_MINI'
+    selected_llm_model TEXT NOT NULL DEFAULT 'PHI_3_MINI',
+    theme_mode TEXT NOT NULL DEFAULT 'SYSTEM',
+    font_scale REAL NOT NULL DEFAULT 1.0
 );
 
 getPreferences:
@@ -17,8 +19,8 @@ insertOrUpdatePreferences:
 INSERT OR REPLACE INTO UserPreferencesEntity(
     id, selected_topics, preferred_sources, reading_time_minutes,
     delivery_time_hour, has_completed_onboarding, enable_notifications, enable_local_llm,
-    selected_llm_model
-) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?);
+    selected_llm_model, theme_mode, font_scale
+) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 updateTopics:
 UPDATE UserPreferencesEntity SET selected_topics = ? WHERE id = 1;
@@ -43,3 +45,9 @@ UPDATE UserPreferencesEntity SET enable_local_llm = ? WHERE id = 1;
 
 updateSelectedLlmModel:
 UPDATE UserPreferencesEntity SET selected_llm_model = ? WHERE id = 1;
+
+updateThemeMode:
+UPDATE UserPreferencesEntity SET theme_mode = ? WHERE id = 1;
+
+updateFontScale:
+UPDATE UserPreferencesEntity SET font_scale = ? WHERE id = 1;

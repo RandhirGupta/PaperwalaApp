@@ -16,18 +16,50 @@
 package com.paperwala
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import coil3.compose.setSingletonImageLoaderFactory
+import com.paperwala.data.repository.UserRepository
+import com.paperwala.domain.model.ThemeMode
 import com.paperwala.presentation.image.createImageLoader
 import com.paperwala.presentation.navigation.AppNavigator
+import com.paperwala.presentation.theme.LocalFontScale
+import com.paperwala.presentation.theme.LocalThemeMode
+import com.paperwala.presentation.theme.LocalThemeUpdater
 import com.paperwala.presentation.theme.PaperwalaTheme
+import org.koin.compose.koinInject
 
 @Composable
 fun App() {
+    val userRepository: UserRepository = koinInject()
+    var themeMode by remember { mutableStateOf(ThemeMode.SYSTEM) }
+    var fontScale by remember { mutableFloatStateOf(1.0f) }
+
+    LaunchedEffect(Unit) {
+        val prefs = userRepository.getPreferences()
+        themeMode = prefs.themeMode
+        fontScale = prefs.fontScale
+    }
+
     setSingletonImageLoaderFactory { context ->
         createImageLoader(context)
     }
 
-    PaperwalaTheme {
-        AppNavigator()
+    CompositionLocalProvider(
+        LocalThemeMode provides themeMode,
+        LocalFontScale provides fontScale,
+        LocalThemeUpdater provides { mode, scale ->
+            themeMode = mode
+            fontScale = scale
+        }
+    ) {
+        PaperwalaTheme(themeMode = themeMode, fontScale = fontScale) {
+            AppNavigator()
+        }
     }
 }

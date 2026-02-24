@@ -31,6 +31,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -51,7 +53,6 @@ fun CalendarHeatMap(
     val firstDayOfMonth = LocalDate(year, month, 1)
     val daysInMonth = daysInMonth(year, month)
 
-    // Monday = 1, Sunday = 7
     // Monday = 1, Sunday = 7 (ISO day numbering via ordinal)
     val startDayOfWeek = firstDayOfMonth.dayOfWeek.ordinal + 1
 
@@ -121,12 +122,20 @@ private fun CalendarDay(
         else -> MaterialTheme.colorScheme.onSurface
     }
 
+    val dayDescription = when {
+        isActive && isToday -> "Day $day, today, articles read"
+        isActive -> "Day $day, articles read"
+        isToday -> "Day $day, today"
+        else -> "Day $day"
+    }
+
     Box(
         modifier = modifier
             .aspectRatio(1f)
             .padding(2.dp)
             .clip(CircleShape)
             .background(bgColor)
+            .semantics { contentDescription = dayDescription }
             .then(
                 if (isToday) Modifier.border(
                     2.dp,

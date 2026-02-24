@@ -19,6 +19,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -32,11 +33,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -51,6 +56,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
@@ -59,6 +67,9 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.paperwala.domain.ai.AiStatus
 import com.paperwala.domain.ai.LlmModel
+import com.paperwala.domain.model.ThemeMode
+import com.paperwala.presentation.theme.LocalFontScale
+import com.paperwala.presentation.theme.LocalThemeUpdater
 import com.paperwala.presentation.theme.PaperwalaColors
 
 class SettingsScreen : Screen {
@@ -68,6 +79,7 @@ class SettingsScreen : Screen {
         val viewModel = koinScreenModel<SettingsViewModel>()
         val state by viewModel.state.collectAsState()
         val navigator = LocalNavigator.currentOrThrow
+        val themeUpdater = LocalThemeUpdater.current
 
         Column(
             modifier = Modifier
@@ -81,15 +93,12 @@ class SettingsScreen : Screen {
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    text = "\u2190",
-                    style = MaterialTheme.typography.headlineMedium,
-                    modifier = Modifier
-                        .padding(end = 12.dp)
-                        .let { modifier ->
-                            modifier
-                        }
-                )
+                IconButton(onClick = { navigator.pop() }) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back"
+                    )
+                }
                 Text(
                     text = "Settings",
                     style = MaterialTheme.typography.headlineLarge,
@@ -111,8 +120,24 @@ class SettingsScreen : Screen {
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Appearance section
+            AppearanceSection(
+                themeMode = state.themeMode,
+                fontScale = state.fontScale,
+                onThemeModeChange = { mode ->
+                    viewModel.setThemeMode(mode)
+                    themeUpdater(mode, state.fontScale)
+                },
+                onFontScaleChange = { scale ->
+                    viewModel.setFontScale(scale)
+                    themeUpdater(state.themeMode, scale)
+                }
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             // General section
-            SectionHeader("General")
+            SettingsSectionHeader("General")
 
             SettingsRow(
                 label = "Reading Time",
@@ -149,11 +174,142 @@ class SettingsScreen : Screen {
             Spacer(modifier = Modifier.height(24.dp))
 
             // About section
-            SectionHeader("About")
+            SettingsSectionHeader("About")
 
             SettingsRow(label = "Version", value = "1.0.0")
             SettingsRow(label = "Built with", value = "Kotlin Multiplatform")
         }
+    }
+}
+
+@Composable
+private fun AppearanceSection(
+    themeMode: ThemeMode,
+    fontScale: Float,
+    onThemeModeChange: (ThemeMode) -> Unit,
+    onFontScaleChange: (Float) -> Unit
+) {
+    SettingsSectionHeader("Appearance")
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            // Theme mode selector
+            Text(
+                text = "Theme",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                ThemeMode.entries.forEach { mode ->
+                    ThemeOptionChip(
+                        mode = mode,
+                        isSelected = themeMode == mode,
+                        onSelect = { onThemeModeChange(mode) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline)
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Font scale selector
+            Text(
+                text = "Text Size",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            val fontScaleOptions = listOf(
+                "Small" to 0.85f,
+                "Default" to 1.0f,
+                "Large" to 1.15f,
+                "Extra Large" to 1.3f
+            )
+
+            fontScaleOptions.forEach { (label, scale) ->
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onFontScaleChange(scale) }
+                        .padding(vertical = 6.dp)
+                ) {
+                    RadioButton(
+                        selected = fontScale == scale,
+                        onClick = { onFontScaleChange(scale) },
+                        colors = RadioButtonDefaults.colors(
+                            selectedColor = PaperwalaColors.MastheadRed
+                        ),
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ThemeOptionChip(
+    mode: ThemeMode,
+    isSelected: Boolean,
+    onSelect: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val swatchColor = when (mode) {
+        ThemeMode.SYSTEM -> MaterialTheme.colorScheme.primary
+        ThemeMode.LIGHT -> PaperwalaColors.PaperCream
+        ThemeMode.DARK -> PaperwalaColors.SurfaceDark
+        ThemeMode.SEPIA -> PaperwalaColors.SepiaBackground
+    }
+    val borderColor = if (isSelected) PaperwalaColors.MastheadRed else MaterialTheme.colorScheme.outline
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+            .clip(RoundedCornerShape(8.dp))
+            .border(
+                width = if (isSelected) 2.dp else 1.dp,
+                color = borderColor,
+                shape = RoundedCornerShape(8.dp)
+            )
+            .clickable(onClick = onSelect)
+            .padding(vertical = 10.dp, horizontal = 4.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(24.dp)
+                .clip(CircleShape)
+                .background(swatchColor)
+                .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = mode.displayName,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+            color = if (isSelected) PaperwalaColors.MastheadRed else MaterialTheme.colorScheme.onSurface
+        )
     }
 }
 
@@ -165,7 +321,7 @@ private fun AiSettingsSection(
     onDownloadModel: () -> Unit,
     onDeleteModel: () -> Unit
 ) {
-    SectionHeader("AI Summaries")
+    SettingsSectionHeader("AI Summaries")
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -364,13 +520,15 @@ private fun AiStatusChip(status: AiStatus) {
 }
 
 @Composable
-private fun SectionHeader(title: String) {
+private fun SettingsSectionHeader(title: String) {
     Text(
         text = title.uppercase(),
         style = MaterialTheme.typography.labelLarge,
         fontWeight = FontWeight.Bold,
         color = PaperwalaColors.InkLightGray,
-        modifier = Modifier.padding(bottom = 8.dp)
+        modifier = Modifier
+            .padding(bottom = 8.dp)
+            .semantics { heading() }
     )
 }
 

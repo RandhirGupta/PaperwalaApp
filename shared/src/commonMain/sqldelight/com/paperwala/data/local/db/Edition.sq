@@ -18,6 +18,9 @@ CREATE TABLE EditionArticleEntity (
     FOREIGN KEY (article_id) REFERENCES ArticleEntity(id)
 );
 
+CREATE INDEX IF NOT EXISTS idx_edition_date ON EditionEntity(date);
+CREATE INDEX IF NOT EXISTS idx_edition_article_edition_id ON EditionArticleEntity(edition_id);
+
 getEditionByDate:
 SELECT * FROM EditionEntity WHERE date = ?;
 
