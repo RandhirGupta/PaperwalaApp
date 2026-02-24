@@ -108,6 +108,8 @@ class NewsRepository(
         val cutoff = Clock.System.now().toEpochMilliseconds() - (48 * 60 * 60 * 1000L)
         database.articleQueries.deleteOldArticles(cutoff)
 
+        println("[NewsRepository] fetchAndStoreNews complete: ${allArticles.size} raw, ${deduplicated.size} deduplicated")
+
         deduplicated
     }
 
@@ -182,14 +184,16 @@ class NewsRepository(
 
     private suspend fun fetchFromRss(source: NewsSources.SourceInfo): List<Article> {
         val articles = mutableListOf<Article>()
-        for ((_, feedUrl) in source.rssFeeds) {
+        for ((category, feedUrl) in source.rssFeeds) {
             try {
                 val items = rssFeedService.fetchFeed(feedUrl)
-                articles.addAll(items.map { ArticleMapper.fromRssItem(it, source.displayName) })
+                val mapped = items.map { ArticleMapper.fromRssItem(it, source.displayName) }
+                articles.addAll(mapped)
             } catch (e: Exception) {
-                // Skip failed feed, continue with others
+                println("[NewsRepository] ${source.displayName}/$category FAILED: ${e::class.simpleName} - ${e.message}")
             }
         }
+        println("[NewsRepository] Total from ${source.displayName}: ${articles.size} articles")
         return articles
     }
 }

@@ -109,6 +109,14 @@ class MorningEditionScreen : Screen {
                 when {
                     state.isLoading && state.edition == null -> LoadingState()
                     state.error != null && state.edition == null -> ErrorState(state.error!!)
+                    state.edition != null && state.edition!!.articleCount == 0 -> EmptyEditionState(
+                        onBookmarksClick = {
+                            navigator.push(BookmarksScreen())
+                        },
+                        onSettingsClick = {
+                            navigator.push(SettingsScreen())
+                        }
+                    )
                     state.edition != null -> EditionContent(
                         edition = state.edition!!,
                         currentStreak = state.currentStreak,
@@ -165,6 +173,61 @@ private fun ErrorState(message: String) {
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(32.dp)
         )
+    }
+}
+
+@Composable
+private fun EmptyEditionState(
+    onBookmarksClick: () -> Unit,
+    onSettingsClick: () -> Unit
+) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Minimal header with navigation icons
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onBookmarksClick) {
+                Icon(
+                    Icons.Default.BookmarkBorder,
+                    contentDescription = "Bookmarks",
+                    tint = PaperwalaColors.InkGray
+                )
+            }
+            IconButton(onClick = onSettingsClick) {
+                Icon(
+                    Icons.Default.Settings,
+                    contentDescription = "Settings",
+                    tint = PaperwalaColors.InkGray
+                )
+            }
+        }
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(32.dp)
+            ) {
+                Text(
+                    text = "No stories available",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = PaperwalaColors.InkGray,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Pull down to refresh and try again.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = PaperwalaColors.InkLightGray,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
     }
 }
 
@@ -270,31 +333,29 @@ private fun NewspaperMasthead(
             .padding(horizontal = 16.dp, vertical = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Action row: streak badge | bookmarks | settings
+        // Action row: streak badge on left, icons always on right
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             StreakBadge(
                 currentStreak = currentStreak,
                 onClick = onStreakClick
             )
-            Row {
-                IconButton(onClick = onBookmarksClick) {
-                    Icon(
-                        Icons.Default.BookmarkBorder,
-                        contentDescription = "Bookmarks",
-                        tint = PaperwalaColors.InkGray
-                    )
-                }
-                IconButton(onClick = onSettingsClick) {
-                    Icon(
-                        Icons.Default.Settings,
-                        contentDescription = "Settings",
-                        tint = PaperwalaColors.InkGray
-                    )
-                }
+            Spacer(modifier = Modifier.weight(1f))
+            IconButton(onClick = onBookmarksClick) {
+                Icon(
+                    Icons.Default.BookmarkBorder,
+                    contentDescription = "Bookmarks",
+                    tint = PaperwalaColors.InkGray
+                )
+            }
+            IconButton(onClick = onSettingsClick) {
+                Icon(
+                    Icons.Default.Settings,
+                    contentDescription = "Settings",
+                    tint = PaperwalaColors.InkGray
+                )
             }
         }
 

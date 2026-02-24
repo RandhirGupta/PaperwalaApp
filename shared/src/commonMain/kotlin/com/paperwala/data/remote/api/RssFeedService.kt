@@ -27,8 +27,11 @@ class RssFeedService(private val httpClient: HttpClient) {
     suspend fun fetchFeed(url: String): List<RssItem> {
         return try {
             val xml = httpClient.get(url).bodyAsText()
-            parseWithKSoup(xml, feedUrl = url)
+            val items = parseWithKSoup(xml, feedUrl = url)
+            println("[RssFeedService] Fetched ${items.size} items from $url")
+            items
         } catch (e: Exception) {
+            println("[RssFeedService] Failed to fetch $url: ${e::class.simpleName} - ${e.message}")
             emptyList()
         }
     }

@@ -37,9 +37,9 @@ class GenerateMorningEditionUseCase(
 ) {
 
     suspend fun execute(forceRefresh: Boolean = false): Edition {
-        // Check if today's edition already exists
+        // Check if today's edition already exists (skip cache if it was empty)
         val existing = editionRepository.getTodayEdition()
-        if (existing != null && !forceRefresh) {
+        if (existing != null && !forceRefresh && existing.articleCount > 0) {
             return existing
         }
 
