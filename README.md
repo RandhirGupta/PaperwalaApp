@@ -71,19 +71,21 @@ Every morning, a newspaper wala in India delivers your paper to your doorstep. Y
 - AI relevance scoring integrated into edition pipeline
 - 95 unit tests across 10 test classes (kotlin-test + coroutines-test)
 
-### ⬜ Phase 4: Habits
+### ✅ Phase 4: Habits
 
 - Reading streak tracking and streak dashboard
 - Push notifications for morning edition delivery
 - Article bookmarking and reading list
 - Share articles to other apps
 
-### ⬜ Phase 5: Polish
+### ✅ Phase 5: Polish
 
-- Dark mode and sepia reading mode
+- Dark mode, sepia, and system theme modes
 - Accessibility improvements (content descriptions, font scaling)
-- Performance optimization and offline-first refinements
-- App store release (Google Play + App Store)
+- Interactive reading time and delivery time in Settings
+- Secure API key management (local.properties + BuildConfig)
+- Image loading with Coil + Ktor network fetcher
+- Clickable "Read full article" links in article detail
 
 ---
 
