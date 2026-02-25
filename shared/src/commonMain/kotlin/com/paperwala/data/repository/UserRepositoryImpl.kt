@@ -20,12 +20,13 @@ import com.paperwala.domain.ai.LlmModel
 import com.paperwala.domain.model.ThemeMode
 import com.paperwala.domain.model.TopicCategory
 import com.paperwala.domain.model.UserPreferences
+import com.paperwala.domain.repository.UserRepository
 
-class UserRepository(
+class UserRepositoryImpl(
     private val database: PaperwalaDatabase
-) {
+) : UserRepository {
 
-    fun getPreferences(): UserPreferences {
+    override fun getPreferences(): UserPreferences {
         val entity = database.userPreferencesQueries.getPreferences().executeAsOneOrNull()
             ?: return UserPreferences()
 
@@ -48,7 +49,7 @@ class UserRepository(
         )
     }
 
-    fun savePreferences(prefs: UserPreferences) {
+    override fun savePreferences(prefs: UserPreferences) {
         database.userPreferencesQueries.insertOrUpdatePreferences(
             selected_topics = prefs.selectedTopics.joinToString(",") { it.name },
             preferred_sources = prefs.preferredSources.joinToString(","),
@@ -63,29 +64,29 @@ class UserRepository(
         )
     }
 
-    fun updateTopics(topics: List<TopicCategory>) {
+    override fun updateTopics(topics: List<TopicCategory>) {
         database.userPreferencesQueries.updateTopics(
             topics.joinToString(",") { it.name }
         )
     }
 
-    fun updateSources(sources: List<String>) {
+    override fun updateSources(sources: List<String>) {
         database.userPreferencesQueries.updateSources(sources.joinToString(","))
     }
 
-    fun updateReadingTime(minutes: Int) {
+    override fun updateReadingTime(minutes: Int) {
         database.userPreferencesQueries.updateReadingTime(minutes.toLong())
     }
 
-    fun updateDeliveryTime(hour: Int) {
+    override fun updateDeliveryTime(hour: Int) {
         database.userPreferencesQueries.updateDeliveryTime(hour.toLong())
     }
 
-    fun markOnboardingComplete() {
+    override fun markOnboardingComplete() {
         database.userPreferencesQueries.markOnboardingComplete()
     }
 
-    fun hasCompletedOnboarding(): Boolean {
+    override fun hasCompletedOnboarding(): Boolean {
         return getPreferences().hasCompletedOnboarding
     }
 }

@@ -22,9 +22,9 @@ import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 
-class RssFeedService(private val httpClient: HttpClient) {
+class RssFeedService(private val httpClient: HttpClient) : RssFeedApi {
 
-    suspend fun fetchFeed(url: String): List<RssItem> {
+    override suspend fun fetchFeed(url: String): List<RssItem> {
         return try {
             val xml = httpClient.get(url).bodyAsText()
             val items = parseWithKSoup(xml, feedUrl = url)

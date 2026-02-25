@@ -15,6 +15,7 @@
  */
 package com.paperwala.data.mapper
 
+import com.paperwala.data.local.db.ArticleEntity
 import com.paperwala.data.remote.dto.GNewsArticle
 import com.paperwala.data.remote.dto.NewsApiArticle
 import com.paperwala.data.remote.dto.RssItem
@@ -25,7 +26,7 @@ import com.paperwala.util.ReadTimeCalculator
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 
-object ArticleMapper {
+class ArticleMapper {
 
     fun fromNewsApi(dto: NewsApiArticle, category: TopicCategory? = null): Article {
         val parsedInstant = try {
@@ -155,4 +156,63 @@ object ArticleMapper {
             }
         }
     }
+}
+
+fun ArticleEntity.toDomain(): Article {
+    return Article(
+        id = id,
+        title = title,
+        summary = summary,
+        fullContent = full_content,
+        sourceUrl = source_url,
+        sourceName = source_name,
+        sourceLogoUrl = source_logo_url,
+        imageUrl = image_url,
+        author = author,
+        publishedAt = Instant.fromEpochMilliseconds(published_at),
+        fetchedAt = Instant.fromEpochMilliseconds(fetched_at),
+        category = TopicCategory.fromString(category),
+        relevanceScore = relevance_score.toFloat(),
+        readTimeMinutes = read_time_minutes.toInt(),
+        isRead = is_read == 1L,
+        isBookmarked = is_bookmarked == 1L
+    )
+}
+
+fun articleFromDbRow(
+    id: String,
+    title: String,
+    summary: String,
+    fullContent: String?,
+    sourceUrl: String,
+    sourceName: String,
+    sourceLogoUrl: String?,
+    imageUrl: String?,
+    author: String?,
+    publishedAt: Long,
+    fetchedAt: Long,
+    category: String,
+    relevanceScore: Double,
+    readTimeMinutes: Long,
+    isRead: Long,
+    isBookmarked: Long
+): Article {
+    return Article(
+        id = id,
+        title = title,
+        summary = summary,
+        fullContent = fullContent,
+        sourceUrl = sourceUrl,
+        sourceName = sourceName,
+        sourceLogoUrl = sourceLogoUrl,
+        imageUrl = imageUrl,
+        author = author,
+        publishedAt = Instant.fromEpochMilliseconds(publishedAt),
+        fetchedAt = Instant.fromEpochMilliseconds(fetchedAt),
+        category = TopicCategory.fromString(category),
+        relevanceScore = relevanceScore.toFloat(),
+        readTimeMinutes = readTimeMinutes.toInt(),
+        isRead = isRead == 1L,
+        isBookmarked = isBookmarked == 1L
+    )
 }

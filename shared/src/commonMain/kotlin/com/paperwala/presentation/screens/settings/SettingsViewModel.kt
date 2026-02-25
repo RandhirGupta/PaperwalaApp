@@ -17,16 +17,19 @@ package com.paperwala.presentation.screens.settings
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import com.paperwala.data.repository.UserRepository
+import com.paperwala.domain.repository.UserRepository
 import com.paperwala.data.sync.BackgroundSyncScheduler
 import com.paperwala.domain.ai.AiStatus
 import com.paperwala.domain.ai.LlmModel
 import com.paperwala.domain.ai.ModelManager
 import com.paperwala.domain.model.ThemeMode
+import com.paperwala.domain.model.UserPreferences
+import com.paperwala.util.ApiKeys
 import com.paperwala.util.NotificationManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class SettingsState(
@@ -70,11 +73,7 @@ class SettingsViewModel(
             selectedModel = selectedModel,
             isModelDownloaded = modelDownloaded,
             modelSizeMb = modelSizeBytes / (1024 * 1024),
-            aiStatus = when {
-                prefs.enableLocalLlm && modelDownloaded -> AiStatus.LOCAL_LLM
-                com.paperwala.util.ApiKeys.GEMINI_API_KEY.isNotBlank() -> AiStatus.CLOUD
-                else -> AiStatus.RULE_BASED
-            },
+            aiStatus = resolveAiStatus(prefs.enableLocalLlm, modelDownloaded),
             readingTimeMinutes = prefs.readingTimeMinutes,
             deliveryTimeHour = prefs.deliveryTimeHour,
             enableNotifications = prefs.enableNotifications,
@@ -83,81 +82,127 @@ class SettingsViewModel(
         )
     }
 
-    fun toggleLocalLlm(enabled: Boolean) {
+    private fun resolveAiStatus(enableLocalLlm: Boolean, modelDownloaded: Boolean): AiStatus {
+        return when {
+            enableLocalLlm && modelDownloaded -> AiStatus.LOCAL_LLM
+            ApiKeys.GEMINI_API_KEY.isNotBlank() -> AiStatus.CLOUD
+            else -> AiStatus.RULE_BASED
+        }
+    }
+
+    /** Saves a preference change and applies a targeted state update. */
+    private inline fun updatePreference(
+        transform: (UserPreferences) -> UserPreferences,
+        stateUpdate: (SettingsState) -> SettingsState
+    ) {
         val prefs = userRepository.getPreferences()
-        userRepository.savePreferences(prefs.copy(enableLocalLlm = enabled))
-        loadSettings()
+        userRepository.savePreferences(transform(prefs))
+        _state.update(stateUpdate)
+    }
+
+    fun toggleLocalLlm(enabled: Boolean) {
+        updatePreference(
+            transform = { it.copy(enableLocalLlm = enabled) },
+            stateUpdate = { state ->
+                val modelDownloaded = modelManager.isModelDownloaded(state.selectedModel)
+                state.copy(
+                    enableLocalLlm = enabled,
+                    aiStatus = resolveAiStatus(enabled, modelDownloaded)
+                )
+            }
+        )
     }
 
     fun selectModel(model: LlmModel) {
-        val prefs = userRepository.getPreferences()
-        userRepository.savePreferences(prefs.copy(selectedLlmModel = model))
-        loadSettings()
+        val modelDownloaded = modelManager.isModelDownloaded(model)
+        val modelSizeBytes = modelManager.getModelSizeBytes(model)
+        updatePreference(
+            transform = { it.copy(selectedLlmModel = model) },
+            stateUpdate = {
+                it.copy(
+                    selectedModel = model,
+                    isModelDownloaded = modelDownloaded,
+                    modelSizeMb = modelSizeBytes / (1024 * 1024),
+                    aiStatus = resolveAiStatus(it.enableLocalLlm, modelDownloaded)
+                )
+            }
+        )
     }
 
     fun toggleNotifications(enabled: Boolean) {
         if (enabled) {
             notificationManager.requestPermission()
         }
-        val prefs = userRepository.getPreferences()
-        userRepository.savePreferences(prefs.copy(enableNotifications = enabled))
-        loadSettings()
+        updatePreference(
+            transform = { it.copy(enableNotifications = enabled) },
+            stateUpdate = { it.copy(enableNotifications = enabled) }
+        )
     }
 
     fun updateReadingTime(minutes: Int) {
-        val prefs = userRepository.getPreferences()
-        userRepository.savePreferences(prefs.copy(readingTimeMinutes = minutes))
-        loadSettings()
+        updatePreference(
+            transform = { it.copy(readingTimeMinutes = minutes) },
+            stateUpdate = { it.copy(readingTimeMinutes = minutes) }
+        )
     }
 
     fun updateDeliveryTime(hour: Int) {
-        val prefs = userRepository.getPreferences()
-        userRepository.savePreferences(prefs.copy(deliveryTimeHour = hour))
+        updatePreference(
+            transform = { it.copy(deliveryTimeHour = hour) },
+            stateUpdate = { it.copy(deliveryTimeHour = hour) }
+        )
         syncScheduler.scheduleEditionSync(hour)
-        loadSettings()
     }
 
     fun downloadModel() {
         val model = _state.value.selectedModel
         screenModelScope.launch {
-            _state.value = _state.value.copy(
-                isDownloading = true,
-                downloadProgress = 0f,
-                downloadError = null
-            )
+            _state.update {
+                it.copy(isDownloading = true, downloadProgress = 0f, downloadError = null)
+            }
             try {
                 modelManager.downloadModel(model) { progress ->
-                    _state.value = _state.value.copy(downloadProgress = progress)
+                    _state.update { it.copy(downloadProgress = progress) }
                 }
-                _state.value = _state.value.copy(
-                    isDownloading = false,
-                    isModelDownloaded = true,
-                    modelSizeMb = modelManager.getModelSizeBytes(model) / (1024 * 1024)
-                )
-                loadSettings()
+                val modelSizeBytes = modelManager.getModelSizeBytes(model)
+                _state.update {
+                    it.copy(
+                        isDownloading = false,
+                        isModelDownloaded = true,
+                        modelSizeMb = modelSizeBytes / (1024 * 1024),
+                        aiStatus = resolveAiStatus(it.enableLocalLlm, true)
+                    )
+                }
             } catch (e: Exception) {
-                _state.value = _state.value.copy(
-                    isDownloading = false,
-                    downloadError = e.message ?: "Download failed"
-                )
+                _state.update {
+                    it.copy(isDownloading = false, downloadError = e.message ?: "Download failed")
+                }
             }
         }
     }
 
     fun deleteModel() {
         modelManager.deleteModel(_state.value.selectedModel)
-        loadSettings()
+        _state.update {
+            it.copy(
+                isModelDownloaded = false,
+                modelSizeMb = 0,
+                aiStatus = resolveAiStatus(it.enableLocalLlm, false)
+            )
+        }
     }
 
     fun setThemeMode(mode: ThemeMode) {
-        val prefs = userRepository.getPreferences()
-        userRepository.savePreferences(prefs.copy(themeMode = mode))
-        loadSettings()
+        updatePreference(
+            transform = { it.copy(themeMode = mode) },
+            stateUpdate = { it.copy(themeMode = mode) }
+        )
     }
 
     fun setFontScale(scale: Float) {
-        val prefs = userRepository.getPreferences()
-        userRepository.savePreferences(prefs.copy(fontScale = scale))
-        loadSettings()
+        updatePreference(
+            transform = { it.copy(fontScale = scale) },
+            stateUpdate = { it.copy(fontScale = scale) }
+        )
     }
 }

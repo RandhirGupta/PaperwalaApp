@@ -44,7 +44,7 @@ import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.paperwala.data.repository.UserRepository
+import com.paperwala.domain.repository.UserRepository
 import com.paperwala.presentation.animation.NewspaperDeliveryAnimation
 import com.paperwala.presentation.screens.morningedition.MorningEditionScreen
 import com.paperwala.presentation.screens.onboarding.OnboardingScreen

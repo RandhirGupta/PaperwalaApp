@@ -15,7 +15,7 @@
  */
 package com.paperwala.data.sync
 
-import com.paperwala.data.repository.UserRepository
+import com.paperwala.domain.repository.UserRepository
 import com.paperwala.domain.usecase.GenerateMorningEditionUseCase
 import com.paperwala.util.NotificationManager
 import kotlinx.coroutines.MainScope

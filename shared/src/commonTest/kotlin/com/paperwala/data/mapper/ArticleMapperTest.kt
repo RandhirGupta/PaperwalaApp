@@ -14,6 +14,8 @@ import kotlin.test.assertTrue
 
 class ArticleMapperTest {
 
+    private val mapper = ArticleMapper()
+
     // --- fromNewsApi ---
 
     @Test
@@ -26,7 +28,7 @@ class ArticleMapperTest {
             publishedAt = "2026-02-23T10:00:00Z"
         )
 
-        val article = ArticleMapper.fromNewsApi(dto)
+        val article = mapper.fromNewsApi(dto)
 
         assertEquals("Test Title", article.title)
         assertEquals("Test description", article.summary)
@@ -42,7 +44,7 @@ class ArticleMapperTest {
             publishedAt = "2026-02-23T10:00:00Z"
         )
 
-        val article = ArticleMapper.fromNewsApi(dto, TopicCategory.SPORTS)
+        val article = mapper.fromNewsApi(dto, TopicCategory.SPORTS)
         assertEquals(TopicCategory.SPORTS, article.category)
     }
 
@@ -54,7 +56,7 @@ class ArticleMapperTest {
             publishedAt = "2026-02-23T10:00:00Z"
         )
 
-        val article = ArticleMapper.fromNewsApi(dto)
+        val article = mapper.fromNewsApi(dto)
         assertEquals(TopicCategory.TECHNOLOGY, article.category)
     }
 
@@ -66,7 +68,7 @@ class ArticleMapperTest {
             publishedAt = "2026-02-23T10:00:00Z"
         )
 
-        val article = ArticleMapper.fromNewsApi(dto)
+        val article = mapper.fromNewsApi(dto)
         assertEquals("Bold Title", article.title)
     }
 
@@ -79,14 +81,14 @@ class ArticleMapperTest {
         )
 
         // Should not throw, falls back to Clock.System.now()
-        val article = ArticleMapper.fromNewsApi(dto)
+        val article = mapper.fromNewsApi(dto)
         assertNotNull(article.publishedAt)
     }
 
     @Test
     fun fromNewsApiGeneratesIdFromUrl() {
         val dto = NewsApiArticle(url = "https://example.com/123", title = "Title", publishedAt = "2026-02-23T10:00:00Z")
-        val article = ArticleMapper.fromNewsApi(dto)
+        val article = mapper.fromNewsApi(dto)
         assertEquals("https://example.com/123".hashCode().toString(), article.id)
     }
 
@@ -103,7 +105,7 @@ class ArticleMapperTest {
             source = GNewsSource(name = "Reuters")
         )
 
-        val article = ArticleMapper.fromGNews(dto)
+        val article = mapper.fromGNews(dto)
 
         assertEquals("GNews Article", article.title)
         assertEquals("GNews summary", article.summary)
@@ -119,7 +121,7 @@ class ArticleMapperTest {
             publishedAt = "2026-02-23T10:00:00Z"
         )
 
-        val article = ArticleMapper.fromGNews(dto, TopicCategory.BUSINESS)
+        val article = mapper.fromGNews(dto, TopicCategory.BUSINESS)
         assertEquals(TopicCategory.BUSINESS, article.category)
     }
 
@@ -135,7 +137,7 @@ class ArticleMapperTest {
             feedUrl = "https://thehindu.com/technology/rss"
         )
 
-        val article = ArticleMapper.fromRssItem(item, "The Hindu")
+        val article = mapper.fromRssItem(item, "The Hindu")
 
         assertEquals("RSS Article", article.title)
         assertEquals("RSS description", article.summary)
@@ -149,9 +151,9 @@ class ArticleMapperTest {
         val sportsItem = RssItem(title = "Article", feedUrl = "https://example.com/sport/rss")
         val businessItem = RssItem(title = "Article", feedUrl = "https://example.com/business/rss")
 
-        assertEquals(TopicCategory.TECHNOLOGY, ArticleMapper.fromRssItem(techItem, "Src").category)
-        assertEquals(TopicCategory.SPORTS, ArticleMapper.fromRssItem(sportsItem, "Src").category)
-        assertEquals(TopicCategory.BUSINESS, ArticleMapper.fromRssItem(businessItem, "Src").category)
+        assertEquals(TopicCategory.TECHNOLOGY, mapper.fromRssItem(techItem, "Src").category)
+        assertEquals(TopicCategory.SPORTS, mapper.fromRssItem(sportsItem, "Src").category)
+        assertEquals(TopicCategory.BUSINESS, mapper.fromRssItem(businessItem, "Src").category)
     }
 
     @Test
@@ -162,7 +164,7 @@ class ArticleMapperTest {
             description = "<img src=\"https://example.com/inline.jpg\"/>"
         )
 
-        val article = ArticleMapper.fromRssItem(item, "Src")
+        val article = mapper.fromRssItem(item, "Src")
         assertEquals("https://example.com/enclosure.jpg", article.imageUrl)
     }
 
@@ -174,7 +176,7 @@ class ArticleMapperTest {
             description = "<p>Text</p><img src=\"https://example.com/img.jpg\"/>"
         )
 
-        val article = ArticleMapper.fromRssItem(item, "Src")
+        val article = mapper.fromRssItem(item, "Src")
         assertEquals("https://example.com/img.jpg", article.imageUrl)
     }
 
@@ -188,7 +190,7 @@ class ArticleMapperTest {
             createArticle("3", "Title C", "https://example.com/2")
         )
 
-        val deduped = ArticleMapper.deduplicateArticles(articles)
+        val deduped = mapper.deduplicateArticles(articles)
 
         assertEquals(2, deduped.size)
         assertEquals("1", deduped[0].id)
@@ -205,7 +207,7 @@ class ArticleMapperTest {
             createArticle("3", "Completely different article about technology and innovation", "https://c.com")
         )
 
-        val deduped = ArticleMapper.deduplicateArticles(articles)
+        val deduped = mapper.deduplicateArticles(articles)
 
         assertEquals(2, deduped.size)
         assertEquals("1", deduped[0].id)
@@ -220,7 +222,7 @@ class ArticleMapperTest {
             createArticle("c", "Third unique article title here", "https://3.com")
         )
 
-        val deduped = ArticleMapper.deduplicateArticles(articles)
+        val deduped = mapper.deduplicateArticles(articles)
 
         assertEquals(3, deduped.size)
         assertEquals("a", deduped[0].id)
@@ -230,7 +232,7 @@ class ArticleMapperTest {
 
     @Test
     fun deduplicateHandlesEmptyList() {
-        assertTrue(ArticleMapper.deduplicateArticles(emptyList()).isEmpty())
+        assertTrue(mapper.deduplicateArticles(emptyList()).isEmpty())
     }
 
     private fun createArticle(id: String, title: String, url: String) = Article(

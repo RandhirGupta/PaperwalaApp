@@ -15,44 +15,58 @@
  */
 package com.paperwala.di
 
+import com.paperwala.data.mapper.ArticleMapper
 import com.paperwala.data.remote.api.GeminiApiService
+import com.paperwala.data.remote.api.GNewsApi
 import com.paperwala.data.remote.api.GNewsApiService
+import com.paperwala.data.remote.api.NewsApi
 import com.paperwala.data.remote.api.NewsApiService
+import com.paperwala.data.remote.api.RssFeedApi
 import com.paperwala.data.remote.api.RssFeedService
 import com.paperwala.data.remote.createHttpClient
-import com.paperwala.data.repository.EditionRepository
-import com.paperwala.data.repository.NewsRepository
-import com.paperwala.data.repository.ReadingStreakRepository
-import com.paperwala.data.repository.UserRepository
+import com.paperwala.data.repository.EditionRepositoryImpl
+import com.paperwala.data.repository.NewsRepositoryImpl
+import com.paperwala.data.repository.ReadingStreakRepositoryImpl
+import com.paperwala.data.repository.UserRepositoryImpl
+import com.paperwala.domain.repository.EditionRepository
+import com.paperwala.domain.repository.NewsRepository
+import com.paperwala.domain.repository.ReadingStreakRepository
+import com.paperwala.domain.repository.UserRepository
 import com.paperwala.domain.ai.ArticleEnhancerFactory
 import com.paperwala.domain.ai.CloudArticleEnhancer
 import com.paperwala.domain.ai.RuleBasedEnhancer
 import com.paperwala.domain.usecase.GenerateMorningEditionUseCase
+import com.paperwala.domain.usecase.GetBookmarksUseCase
+import com.paperwala.domain.usecase.GetReadingStreakUseCase
+import com.paperwala.domain.usecase.MarkArticleReadUseCase
+import com.paperwala.domain.usecase.ToggleBookmarkUseCase
 import com.paperwala.util.ApiKeys
 import org.koin.dsl.module
 
 val networkModule = module {
     single { createHttpClient() }
-    single { NewsApiService(get()) }
-    single { GNewsApiService(get()) }
-    single { RssFeedService(get()) }
+    single<NewsApi> { NewsApiService(get()) }
+    single<GNewsApi> { GNewsApiService(get()) }
+    single<RssFeedApi> { RssFeedService(get()) }
     single { GeminiApiService(get()) }
 }
 
 val repositoryModule = module {
-    single {
-        NewsRepository(
+    single { ArticleMapper() }
+    single<NewsRepository> {
+        NewsRepositoryImpl(
             database = get(),
             newsApiService = get(),
             gNewsApiService = get(),
             rssFeedService = get(),
+            articleMapper = get(),
             newsApiKey = ApiKeys.NEWS_API_KEY,
             gNewsApiKey = ApiKeys.GNEWS_API_KEY
         )
     }
-    single { UserRepository(database = get()) }
-    single { EditionRepository(database = get()) }
-    single { ReadingStreakRepository(database = get()) }
+    single<UserRepository> { UserRepositoryImpl(database = get()) }
+    single<EditionRepository> { EditionRepositoryImpl(database = get()) }
+    single<ReadingStreakRepository> { ReadingStreakRepositoryImpl(database = get()) }
 }
 
 val aiModule = module {
@@ -67,7 +81,7 @@ val aiModule = module {
 }
 
 val useCaseModule = module {
-    factory {
+    single {
         GenerateMorningEditionUseCase(
             newsRepository = get(),
             editionRepository = get(),
@@ -75,6 +89,10 @@ val useCaseModule = module {
             articleEnhancerFactory = get()
         )
     }
+    single { ToggleBookmarkUseCase(newsRepository = get()) }
+    single { GetBookmarksUseCase(newsRepository = get()) }
+    single { GetReadingStreakUseCase(readingStreakRepository = get()) }
+    single { MarkArticleReadUseCase(newsRepository = get()) }
 }
 
 val commonModules = listOf(networkModule, repositoryModule, aiModule, useCaseModule)

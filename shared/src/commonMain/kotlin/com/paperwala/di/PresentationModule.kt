@@ -28,10 +28,9 @@ val presentationModule = module {
     factory {
         MorningEditionViewModel(
             generateEditionUseCase = get(),
-            newsRepository = get(),
-            userRepository = get(),
-            connectivityObserver = get(),
-            readingStreakRepository = get()
+            markArticleReadUseCase = get(),
+            getReadingStreakUseCase = get(),
+            connectivityObserver = get()
         )
     }
     factory {
@@ -42,7 +41,12 @@ val presentationModule = module {
             syncScheduler = get()
         )
     }
-    factory { BookmarksViewModel(newsRepository = get()) }
-    factory { StreakDashboardViewModel(readingStreakRepository = get()) }
-    factory { ArticleDetailViewModel(newsRepository = get(), shareManager = get()) }
+    factory {
+        BookmarksViewModel(
+            getBookmarksUseCase = get(),
+            toggleBookmarkUseCase = get()
+        )
+    }
+    factory { StreakDashboardViewModel(getReadingStreakUseCase = get()) }
+    factory { ArticleDetailViewModel(toggleBookmarkUseCase = get(), shareManager = get()) }
 }

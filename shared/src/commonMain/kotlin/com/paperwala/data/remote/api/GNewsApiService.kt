@@ -21,17 +21,17 @@ import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 
-class GNewsApiService(private val httpClient: HttpClient) {
+class GNewsApiService(private val httpClient: HttpClient) : GNewsApi {
 
     companion object {
         private const val BASE_URL = "https://gnews.io/api/v4"
     }
 
-    suspend fun getTopHeadlines(
+    override suspend fun getTopHeadlines(
         apiKey: String,
-        country: String = "in",
-        category: String? = null,
-        max: Int = 10
+        country: String,
+        category: String?,
+        max: Int
     ): GNewsResponse {
         return httpClient.get("$BASE_URL/top-headlines") {
             parameter("apikey", apiKey)
@@ -42,10 +42,10 @@ class GNewsApiService(private val httpClient: HttpClient) {
         }.body()
     }
 
-    suspend fun searchNews(
+    override suspend fun searchNews(
         apiKey: String,
         query: String,
-        max: Int = 10
+        max: Int
     ): GNewsResponse {
         return httpClient.get("$BASE_URL/search") {
             parameter("apikey", apiKey)

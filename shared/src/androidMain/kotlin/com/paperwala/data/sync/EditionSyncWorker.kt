@@ -18,7 +18,7 @@ package com.paperwala.data.sync
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.paperwala.data.repository.UserRepository
+import com.paperwala.domain.repository.UserRepository
 import com.paperwala.domain.usecase.GenerateMorningEditionUseCase
 import com.paperwala.util.NotificationManager
 import org.koin.core.component.KoinComponent

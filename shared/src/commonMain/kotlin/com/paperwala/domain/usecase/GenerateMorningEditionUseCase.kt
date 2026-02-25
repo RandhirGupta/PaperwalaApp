@@ -15,9 +15,9 @@
  */
 package com.paperwala.domain.usecase
 
-import com.paperwala.data.repository.EditionRepository
-import com.paperwala.data.repository.NewsRepository
-import com.paperwala.data.repository.UserRepository
+import com.paperwala.domain.repository.EditionRepository
+import com.paperwala.domain.repository.NewsRepository
+import com.paperwala.domain.repository.UserRepository
 import com.paperwala.domain.ai.ArticleEnhancerFactory
 import com.paperwala.domain.model.Article
 import com.paperwala.domain.model.Edition

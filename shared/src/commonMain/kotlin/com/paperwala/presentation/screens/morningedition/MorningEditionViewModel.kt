@@ -17,11 +17,10 @@ package com.paperwala.presentation.screens.morningedition
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import com.paperwala.data.repository.NewsRepository
-import com.paperwala.data.repository.ReadingStreakRepository
-import com.paperwala.data.repository.UserRepository
 import com.paperwala.domain.model.Edition
 import com.paperwala.domain.usecase.GenerateMorningEditionUseCase
+import com.paperwala.domain.usecase.GetReadingStreakUseCase
+import com.paperwala.domain.usecase.MarkArticleReadUseCase
 import com.paperwala.util.ConnectivityObserver
 import com.paperwala.util.ConnectivityStatus
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,10 +41,9 @@ data class MorningEditionState(
 
 class MorningEditionViewModel(
     private val generateEditionUseCase: GenerateMorningEditionUseCase,
-    private val newsRepository: NewsRepository,
-    private val userRepository: UserRepository,
-    private val connectivityObserver: ConnectivityObserver,
-    private val readingStreakRepository: ReadingStreakRepository
+    private val markArticleReadUseCase: MarkArticleReadUseCase,
+    private val getReadingStreakUseCase: GetReadingStreakUseCase,
+    private val connectivityObserver: ConnectivityObserver
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(MorningEditionState())
@@ -69,7 +67,7 @@ class MorningEditionViewModel(
 
     private fun loadStreak() {
         screenModelScope.launch {
-            val streak = readingStreakRepository.getReadingStreak()
+            val streak = getReadingStreakUseCase.execute()
             _state.value = _state.value.copy(currentStreak = streak.currentStreak)
         }
     }
@@ -93,7 +91,7 @@ class MorningEditionViewModel(
     }
 
     fun markArticleAsRead(articleId: String) {
-        newsRepository.markArticleAsRead(articleId)
+        markArticleReadUseCase.execute(articleId)
         loadStreak() // Refresh streak after reading
     }
 

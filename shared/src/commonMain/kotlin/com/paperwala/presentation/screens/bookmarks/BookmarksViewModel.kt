@@ -17,8 +17,9 @@ package com.paperwala.presentation.screens.bookmarks
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import com.paperwala.data.repository.NewsRepository
 import com.paperwala.domain.model.Article
+import com.paperwala.domain.usecase.GetBookmarksUseCase
+import com.paperwala.domain.usecase.ToggleBookmarkUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,7 +31,8 @@ data class BookmarksState(
 )
 
 class BookmarksViewModel(
-    private val newsRepository: NewsRepository
+    private val getBookmarksUseCase: GetBookmarksUseCase,
+    private val toggleBookmarkUseCase: ToggleBookmarkUseCase
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(BookmarksState())
@@ -43,13 +45,13 @@ class BookmarksViewModel(
     fun loadBookmarks() {
         screenModelScope.launch {
             _state.value = _state.value.copy(isLoading = true)
-            val articles = newsRepository.getBookmarkedArticles()
+            val articles = getBookmarksUseCase.execute()
             _state.value = BookmarksState(articles = articles, isLoading = false)
         }
     }
 
     fun toggleBookmark(articleId: String) {
-        newsRepository.toggleBookmark(articleId)
+        toggleBookmarkUseCase.execute(articleId)
         loadBookmarks()
     }
 }

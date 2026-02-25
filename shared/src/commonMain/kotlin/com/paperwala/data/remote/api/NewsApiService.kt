@@ -21,17 +21,17 @@ import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 
-class NewsApiService(private val httpClient: HttpClient) {
+class NewsApiService(private val httpClient: HttpClient) : NewsApi {
 
     companion object {
         private const val BASE_URL = "https://newsapi.org/v2"
     }
 
-    suspend fun getTopHeadlines(
+    override suspend fun getTopHeadlines(
         apiKey: String,
-        country: String = "in",
-        category: String? = null,
-        pageSize: Int = 20
+        country: String,
+        category: String?,
+        pageSize: Int
     ): NewsApiResponse {
         return httpClient.get("$BASE_URL/top-headlines") {
             parameter("apiKey", apiKey)
@@ -41,12 +41,12 @@ class NewsApiService(private val httpClient: HttpClient) {
         }.body()
     }
 
-    suspend fun searchNews(
+    override suspend fun searchNews(
         apiKey: String,
         query: String,
-        language: String = "en",
-        sortBy: String = "publishedAt",
-        pageSize: Int = 20
+        language: String,
+        sortBy: String,
+        pageSize: Int
     ): NewsApiResponse {
         return httpClient.get("$BASE_URL/everything") {
             parameter("apiKey", apiKey)

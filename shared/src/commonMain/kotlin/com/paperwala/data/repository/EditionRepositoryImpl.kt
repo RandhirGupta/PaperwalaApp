@@ -15,22 +15,25 @@
  */
 package com.paperwala.data.repository
 
+import com.paperwala.data.local.db.GetEditionArticles
 import com.paperwala.data.local.db.PaperwalaDatabase
+import com.paperwala.data.mapper.articleFromDbRow
 import com.paperwala.domain.model.Article
 import com.paperwala.domain.model.Edition
 import com.paperwala.domain.model.Section
 import com.paperwala.domain.model.TopicCategory
+import com.paperwala.domain.repository.EditionRepository
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
-class EditionRepository(
+class EditionRepositoryImpl(
     private val database: PaperwalaDatabase
-) {
+) : EditionRepository {
 
-    fun getTodayEdition(): Edition? {
+    override fun getTodayEdition(): Edition? {
         val today = Clock.System.now()
             .toLocalDateTime(TimeZone.currentSystemDefault())
             .date
@@ -42,52 +45,19 @@ class EditionRepository(
         val editionArticles = database.editionQueries.getEditionArticles(editionEntity.id)
             .executeAsList()
 
-        // Group articles by section
-        val sectionMap = mutableMapOf<String, MutableList<Article>>()
-        for (row in editionArticles) {
-            val article = Article(
-                id = row.id,
-                title = row.title,
-                summary = row.summary,
-                fullContent = row.full_content,
-                sourceUrl = row.source_url,
-                sourceName = row.source_name,
-                sourceLogoUrl = row.source_logo_url,
-                imageUrl = row.image_url,
-                author = row.author,
-                publishedAt = Instant.fromEpochMilliseconds(row.published_at),
-                fetchedAt = Instant.fromEpochMilliseconds(row.fetched_at),
-                category = TopicCategory.fromString(row.category),
-                relevanceScore = row.relevance_score.toFloat(),
-                readTimeMinutes = row.read_time_minutes.toInt(),
-                isRead = row.is_read == 1L,
-                isBookmarked = row.is_bookmarked == 1L
-            )
-            sectionMap.getOrPut(row.section_category) { mutableListOf() }.add(article)
-        }
-
-        val sections = sectionMap.map { (categoryName, articles) ->
-            val category = TopicCategory.fromString(categoryName)
-            Section(
-                category = category,
-                displayName = category.displayName,
-                articles = articles
-            )
-        }
-
         return Edition(
             id = editionEntity.id,
             date = LocalDate.parse(editionEntity.date),
             generatedAt = Instant.fromEpochMilliseconds(editionEntity.generated_at),
             headline = editionEntity.headline,
-            sections = sections,
+            sections = buildSections(editionArticles),
             totalReadTimeMinutes = editionEntity.total_read_time_minutes.toInt(),
             articleCount = editionEntity.article_count.toInt(),
             isRead = editionEntity.is_read == 1L
         )
     }
 
-    fun saveEdition(edition: Edition) {
+    override fun saveEdition(edition: Edition) {
         database.editionQueries.insertEdition(
             id = edition.id,
             date = edition.date.toString(),
@@ -113,7 +83,7 @@ class EditionRepository(
         }
     }
 
-    fun getRecentEditions(limit: Int): List<Edition> {
+    override fun getRecentEditions(limit: Int): List<Edition> {
         val editions = database.editionQueries.getRecentEditions(limit.toLong())
             .executeAsList()
 
@@ -121,38 +91,12 @@ class EditionRepository(
             val articles = database.editionQueries.getEditionArticles(entity.id)
                 .executeAsList()
 
-            val sectionMap = mutableMapOf<String, MutableList<Article>>()
-            for (row in articles) {
-                val article = Article(
-                    id = row.id,
-                    title = row.title,
-                    summary = row.summary,
-                    fullContent = row.full_content,
-                    sourceUrl = row.source_url,
-                    sourceName = row.source_name,
-                    sourceLogoUrl = row.source_logo_url,
-                    imageUrl = row.image_url,
-                    author = row.author,
-                    publishedAt = Instant.fromEpochMilliseconds(row.published_at),
-                    fetchedAt = Instant.fromEpochMilliseconds(row.fetched_at),
-                    category = TopicCategory.fromString(row.category),
-                    relevanceScore = row.relevance_score.toFloat(),
-                    readTimeMinutes = row.read_time_minutes.toInt(),
-                    isRead = row.is_read == 1L,
-                    isBookmarked = row.is_bookmarked == 1L
-                )
-                sectionMap.getOrPut(row.section_category) { mutableListOf() }.add(article)
-            }
-
             Edition(
                 id = entity.id,
                 date = LocalDate.parse(entity.date),
                 generatedAt = Instant.fromEpochMilliseconds(entity.generated_at),
                 headline = entity.headline,
-                sections = sectionMap.map { (categoryName, articleList) ->
-                    val category = TopicCategory.fromString(categoryName)
-                    Section(category = category, displayName = category.displayName, articles = articleList)
-                },
+                sections = buildSections(articles),
                 totalReadTimeMinutes = entity.total_read_time_minutes.toInt(),
                 articleCount = entity.article_count.toInt(),
                 isRead = entity.is_read == 1L
@@ -160,7 +104,36 @@ class EditionRepository(
         }
     }
 
-    fun markEditionAsRead(editionId: String) {
+    override fun markEditionAsRead(editionId: String) {
         database.editionQueries.markEditionAsRead(editionId)
+    }
+
+    private fun buildSections(rows: List<GetEditionArticles>): List<Section> {
+        val sectionMap = mutableMapOf<String, MutableList<Article>>()
+        for (row in rows) {
+            val article = articleFromDbRow(
+                id = row.id,
+                title = row.title,
+                summary = row.summary,
+                fullContent = row.full_content,
+                sourceUrl = row.source_url,
+                sourceName = row.source_name,
+                sourceLogoUrl = row.source_logo_url,
+                imageUrl = row.image_url,
+                author = row.author,
+                publishedAt = row.published_at,
+                fetchedAt = row.fetched_at,
+                category = row.category,
+                relevanceScore = row.relevance_score,
+                readTimeMinutes = row.read_time_minutes,
+                isRead = row.is_read,
+                isBookmarked = row.is_bookmarked
+            )
+            sectionMap.getOrPut(row.section_category) { mutableListOf() }.add(article)
+        }
+        return sectionMap.map { (categoryName, articles) ->
+            val category = TopicCategory.fromString(categoryName)
+            Section(category = category, displayName = category.displayName, articles = articles)
+        }
     }
 }

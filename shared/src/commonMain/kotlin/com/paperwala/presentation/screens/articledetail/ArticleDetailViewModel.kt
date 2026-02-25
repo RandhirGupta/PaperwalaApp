@@ -16,14 +16,14 @@
 package com.paperwala.presentation.screens.articledetail
 
 import cafe.adriel.voyager.core.model.ScreenModel
-import com.paperwala.data.repository.NewsRepository
+import com.paperwala.domain.usecase.ToggleBookmarkUseCase
 import com.paperwala.util.ShareManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class ArticleDetailViewModel(
-    private val newsRepository: NewsRepository,
+    private val toggleBookmarkUseCase: ToggleBookmarkUseCase,
     private val shareManager: ShareManager
 ) : ScreenModel {
 
@@ -35,7 +35,7 @@ class ArticleDetailViewModel(
     }
 
     fun toggleBookmark(articleId: String) {
-        newsRepository.toggleBookmark(articleId)
+        toggleBookmarkUseCase.execute(articleId)
         _isBookmarked.value = !_isBookmarked.value
     }
 

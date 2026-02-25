@@ -24,7 +24,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import coil3.compose.setSingletonImageLoaderFactory
-import com.paperwala.data.repository.UserRepository
+import com.paperwala.domain.repository.UserRepository
 import com.paperwala.domain.model.ThemeMode
 import com.paperwala.presentation.image.createImageLoader
 import com.paperwala.presentation.navigation.AppNavigator

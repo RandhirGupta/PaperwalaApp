@@ -18,7 +18,7 @@ package com.paperwala.presentation.screens.onboarding
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.paperwala.data.remote.api.NewsSources
-import com.paperwala.data.repository.UserRepository
+import com.paperwala.domain.repository.UserRepository
 import com.paperwala.data.sync.BackgroundSyncScheduler
 import com.paperwala.domain.model.TopicCategory
 import com.paperwala.domain.model.UserPreferences

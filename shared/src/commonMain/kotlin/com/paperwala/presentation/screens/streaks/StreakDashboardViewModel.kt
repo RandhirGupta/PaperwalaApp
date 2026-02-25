@@ -17,8 +17,8 @@ package com.paperwala.presentation.screens.streaks
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import com.paperwala.data.repository.ReadingStreakRepository
 import com.paperwala.domain.model.ReadingStreak
+import com.paperwala.domain.usecase.GetReadingStreakUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -37,7 +37,7 @@ data class StreakDashboardState(
 )
 
 class StreakDashboardViewModel(
-    private val readingStreakRepository: ReadingStreakRepository
+    private val getReadingStreakUseCase: GetReadingStreakUseCase
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(StreakDashboardState())
@@ -50,8 +50,8 @@ class StreakDashboardViewModel(
     private fun loadData() {
         screenModelScope.launch {
             _state.value = _state.value.copy(isLoading = true)
-            val streak = readingStreakRepository.getReadingStreak()
-            val calendarDates = readingStreakRepository.getReadDatesForMonth(
+            val streak = getReadingStreakUseCase.execute()
+            val calendarDates = getReadingStreakUseCase.getReadDatesForMonth(
                 _state.value.displayYear,
                 _state.value.displayMonth
             )
@@ -85,7 +85,7 @@ class StreakDashboardViewModel(
 
     private fun loadCalendar() {
         screenModelScope.launch {
-            val calendarDates = readingStreakRepository.getReadDatesForMonth(
+            val calendarDates = getReadingStreakUseCase.getReadDatesForMonth(
                 _state.value.displayYear,
                 _state.value.displayMonth
             )

@@ -15,31 +15,34 @@
  */
 package com.paperwala.data.repository
 
-import com.paperwala.data.local.db.ArticleEntity
 import com.paperwala.data.local.db.PaperwalaDatabase
 import com.paperwala.data.mapper.ArticleMapper
-import com.paperwala.data.remote.api.GNewsApiService
-import com.paperwala.data.remote.api.NewsApiService
+import com.paperwala.data.mapper.toDomain
+import com.paperwala.data.remote.api.GNewsApi
+import com.paperwala.data.remote.api.NewsApi
 import com.paperwala.data.remote.api.NewsSources
-import com.paperwala.data.remote.api.RssFeedService
+import com.paperwala.data.remote.api.RssFeedApi
+import com.paperwala.domain.exception.PaperwalaException
 import com.paperwala.domain.model.Article
 import com.paperwala.domain.model.TopicCategory
+import com.paperwala.domain.repository.NewsRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.datetime.Clock
 
-class NewsRepository(
+class NewsRepositoryImpl(
     private val database: PaperwalaDatabase,
-    private val newsApiService: NewsApiService,
-    private val gNewsApiService: GNewsApiService,
-    private val rssFeedService: RssFeedService,
+    private val newsApiService: NewsApi,
+    private val gNewsApiService: GNewsApi,
+    private val rssFeedService: RssFeedApi,
+    private val articleMapper: ArticleMapper,
     private val newsApiKey: String = "",
     private val gNewsApiKey: String = ""
-) {
+) : NewsRepository {
 
-    suspend fun fetchAndStoreNews(
-        preferredSources: List<String> = emptyList()
+    override suspend fun fetchAndStoreNews(
+        preferredSources: List<String>
     ): List<Article> = coroutineScope {
         val allArticles = mutableListOf<Article>()
 
@@ -72,7 +75,7 @@ class NewsRepository(
         results.forEach { allArticles.addAll(it) }
 
         // Deduplicate
-        val deduplicated = ArticleMapper.deduplicateArticles(allArticles)
+        val deduplicated = articleMapper.deduplicateArticles(allArticles)
 
         // Store in database
         deduplicated.forEach { article ->
@@ -105,25 +108,25 @@ class NewsRepository(
         deduplicated
     }
 
-    fun getRecentArticles(sinceMillis: Long): List<Article> {
+    override fun getRecentArticles(sinceMillis: Long): List<Article> {
         return database.articleQueries.getRecentArticles(sinceMillis)
             .executeAsList()
             .map { it.toDomain() }
     }
 
-    fun getTopArticles(sinceMillis: Long, limit: Int): List<Article> {
+    override fun getTopArticles(sinceMillis: Long, limit: Int): List<Article> {
         return database.articleQueries.getTopArticles(sinceMillis, limit.toLong())
             .executeAsList()
             .map { it.toDomain() }
     }
 
-    fun getArticlesByCategory(category: TopicCategory, limit: Int): List<Article> {
+    override fun getArticlesByCategory(category: TopicCategory, limit: Int): List<Article> {
         return database.articleQueries.getArticlesByCategory(category.name, limit.toLong())
             .executeAsList()
             .map { it.toDomain() }
     }
 
-    fun markArticleAsRead(articleId: String) {
+    override fun markArticleAsRead(articleId: String) {
         database.articleQueries.markAsRead(articleId)
         database.readingHistoryQueries.insertReadEvent(
             article_id = articleId,
@@ -133,25 +136,29 @@ class NewsRepository(
         )
     }
 
-    fun toggleBookmark(articleId: String) {
+    override fun toggleBookmark(articleId: String) {
         database.articleQueries.toggleBookmark(articleId)
     }
 
-    fun getBookmarkedArticles(): List<Article> {
+    override fun getBookmarkedArticles(): List<Article> {
         return database.articleQueries.getBookmarkedArticles()
             .executeAsList()
             .map { it.toDomain() }
     }
 
-    fun updateArticleSummaryAndScore(articleId: String, summary: String, relevanceScore: Float) {
+    override fun updateArticleSummaryAndScore(articleId: String, summary: String, relevanceScore: Float) {
         database.articleQueries.updateSummaryAndScore(summary, relevanceScore.toDouble(), articleId)
     }
 
     private suspend fun fetchFromNewsApi(): List<Article> {
         return try {
             val response = newsApiService.getTopHeadlines(apiKey = newsApiKey)
-            response.articles.map { ArticleMapper.fromNewsApi(it) }
+            response.articles.map { articleMapper.fromNewsApi(it) }
+        } catch (e: PaperwalaException) {
+            println("[NewsRepository] NewsAPI failed: ${e.message}")
+            emptyList()
         } catch (e: Exception) {
+            println("[NewsRepository] NewsAPI failed: ${e::class.simpleName} - ${e.message}")
             emptyList()
         }
     }
@@ -159,8 +166,12 @@ class NewsRepository(
     private suspend fun fetchFromGNews(): List<Article> {
         return try {
             val response = gNewsApiService.getTopHeadlines(apiKey = gNewsApiKey)
-            response.articles.map { ArticleMapper.fromGNews(it) }
+            response.articles.map { articleMapper.fromGNews(it) }
+        } catch (e: PaperwalaException) {
+            println("[NewsRepository] GNews failed: ${e.message}")
+            emptyList()
         } catch (e: Exception) {
+            println("[NewsRepository] GNews failed: ${e::class.simpleName} - ${e.message}")
             emptyList()
         }
     }
@@ -170,8 +181,10 @@ class NewsRepository(
         for ((category, feedUrl) in source.rssFeeds) {
             try {
                 val items = rssFeedService.fetchFeed(feedUrl)
-                val mapped = items.map { ArticleMapper.fromRssItem(it, source.displayName) }
+                val mapped = items.map { articleMapper.fromRssItem(it, source.displayName) }
                 articles.addAll(mapped)
+            } catch (e: PaperwalaException) {
+                println("[NewsRepository] ${source.displayName}/$category FAILED: ${e.message}")
             } catch (e: Exception) {
                 println("[NewsRepository] ${source.displayName}/$category FAILED: ${e::class.simpleName} - ${e.message}")
             }
@@ -179,25 +192,4 @@ class NewsRepository(
         println("[NewsRepository] Total from ${source.displayName}: ${articles.size} articles")
         return articles
     }
-}
-
-private fun ArticleEntity.toDomain(): Article {
-    return Article(
-        id = id,
-        title = title,
-        summary = summary,
-        fullContent = full_content,
-        sourceUrl = source_url,
-        sourceName = source_name,
-        sourceLogoUrl = source_logo_url,
-        imageUrl = image_url,
-        author = author,
-        publishedAt = kotlinx.datetime.Instant.fromEpochMilliseconds(published_at),
-        fetchedAt = kotlinx.datetime.Instant.fromEpochMilliseconds(fetched_at),
-        category = TopicCategory.fromString(category),
-        relevanceScore = relevance_score.toFloat(),
-        readTimeMinutes = read_time_minutes.toInt(),
-        isRead = is_read == 1L,
-        isBookmarked = is_bookmarked == 1L
-    )
 }

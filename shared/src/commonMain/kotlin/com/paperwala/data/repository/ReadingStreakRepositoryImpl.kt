@@ -17,6 +17,7 @@ package com.paperwala.data.repository
 
 import com.paperwala.data.local.db.PaperwalaDatabase
 import com.paperwala.domain.model.ReadingStreak
+import com.paperwala.domain.repository.ReadingStreakRepository
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
@@ -27,11 +28,11 @@ import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Duration.Companion.days
 
-class ReadingStreakRepository(
+class ReadingStreakRepositoryImpl(
     private val database: PaperwalaDatabase
-) {
+) : ReadingStreakRepository {
 
-    fun getReadingStreak(): ReadingStreak {
+    override fun getReadingStreak(): ReadingStreak {
         val tz = TimeZone.currentSystemDefault()
         val now = Clock.System.now()
         val today = now.toLocalDateTime(tz).date
@@ -67,7 +68,7 @@ class ReadingStreakRepository(
         )
     }
 
-    fun getReadDatesForMonth(year: Int, month: Int): List<LocalDate> {
+    override fun getReadDatesForMonth(year: Int, month: Int): List<LocalDate> {
         val tz = TimeZone.currentSystemDefault()
 
         // Calculate month start and end as epoch millis
