@@ -20,7 +20,6 @@ import com.paperwala.data.local.db.PaperwalaDatabase
 import com.paperwala.data.mapper.ArticleMapper
 import com.paperwala.data.remote.api.GNewsApiService
 import com.paperwala.data.remote.api.NewsApiService
-import com.paperwala.data.remote.api.NewsdataApiService
 import com.paperwala.data.remote.api.NewsSources
 import com.paperwala.data.remote.api.RssFeedService
 import com.paperwala.domain.model.Article
@@ -34,11 +33,9 @@ class NewsRepository(
     private val database: PaperwalaDatabase,
     private val newsApiService: NewsApiService,
     private val gNewsApiService: GNewsApiService,
-    private val newsdataApiService: NewsdataApiService,
     private val rssFeedService: RssFeedService,
     private val newsApiKey: String = "",
-    private val gNewsApiKey: String = "",
-    private val newsdataApiKey: String = ""
+    private val gNewsApiKey: String = ""
 ) {
 
     suspend fun fetchAndStoreNews(
@@ -57,11 +54,6 @@ class NewsRepository(
         // GNews
         if (gNewsApiKey.isNotBlank()) {
             fetchJobs.add(async { fetchFromGNews() })
-        }
-
-        // Newsdata.io
-        if (newsdataApiKey.isNotBlank()) {
-            fetchJobs.add(async { fetchFromNewsdata() })
         }
 
         // RSS feeds from preferred sources
@@ -168,15 +160,6 @@ class NewsRepository(
         return try {
             val response = gNewsApiService.getTopHeadlines(apiKey = gNewsApiKey)
             response.articles.map { ArticleMapper.fromGNews(it) }
-        } catch (e: Exception) {
-            emptyList()
-        }
-    }
-
-    private suspend fun fetchFromNewsdata(): List<Article> {
-        return try {
-            val response = newsdataApiService.getLatestNews(apiKey = newsdataApiKey)
-            response.results.map { ArticleMapper.fromNewsdata(it) }
         } catch (e: Exception) {
             emptyList()
         }

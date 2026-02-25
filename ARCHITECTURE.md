@@ -111,7 +111,6 @@ graph TD
     subgraph Remote["Remote Sources (Ktor)"]
         NA["NewsAPI.org"]
         GN["GNews API"]
-        ND["Newsdata.io"]
         RSS["RSS Feeds"]
     end
 
@@ -139,7 +138,7 @@ graph TD
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': {'fontSize': '16px'}}}%%
 flowchart TD
-    A["1. FETCH<br/>NewsAPI + GNews + Newsdata + RSS"] --> B["2. NORMALIZE<br/>ArticleMapper unifies all sources"]
+    A["1. FETCH<br/>NewsAPI + GNews + RSS"] --> B["2. NORMALIZE<br/>ArticleMapper unifies all sources"]
     B --> C["3. DEDUPLICATE<br/>URL hash + title similarity"]
     C --> D["4. STORE<br/>SQLDelight persists locally"]
     D --> E["5. AI SCORE & SUMMARIZE<br/>LLM rates relevance + summarizes"]
@@ -299,9 +298,8 @@ graph TD
     end
 
     subgraph APIs["REST APIs"]
-        NewsAPI["NewsAPI.org<br/>1000 calls/month"]
+        NewsAPI["NewsAPI.org<br/>100 req/day"]
         GNews["GNews API<br/>100 req/day"]
-        Newsdata["Newsdata.io<br/>200 credits/day"]
     end
 
     Indian --> Mapper["ArticleMapper"]

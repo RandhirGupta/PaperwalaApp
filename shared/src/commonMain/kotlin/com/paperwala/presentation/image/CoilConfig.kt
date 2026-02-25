@@ -19,11 +19,16 @@ import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.disk.DiskCache
 import coil3.memory.MemoryCache
+import coil3.network.ktor3.KtorNetworkFetcherFactory
 import coil3.request.CachePolicy
+import okio.FileSystem
 import okio.Path.Companion.toPath
 
 fun createImageLoader(context: PlatformContext): ImageLoader {
     return ImageLoader.Builder(context)
+        .components {
+            add(KtorNetworkFetcherFactory())
+        }
         .memoryCachePolicy(CachePolicy.ENABLED)
         .memoryCache {
             MemoryCache.Builder()
@@ -33,6 +38,7 @@ fun createImageLoader(context: PlatformContext): ImageLoader {
         .diskCachePolicy(CachePolicy.ENABLED)
         .diskCache {
             DiskCache.Builder()
+                .directory(FileSystem.SYSTEM_TEMPORARY_DIRECTORY / "coil_cache")
                 .maxSizeBytes(50L * 1024 * 1024) // 50 MB
                 .build()
         }

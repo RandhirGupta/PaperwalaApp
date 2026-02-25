@@ -18,7 +18,6 @@ package com.paperwala.di
 import com.paperwala.data.remote.api.GeminiApiService
 import com.paperwala.data.remote.api.GNewsApiService
 import com.paperwala.data.remote.api.NewsApiService
-import com.paperwala.data.remote.api.NewsdataApiService
 import com.paperwala.data.remote.api.RssFeedService
 import com.paperwala.data.remote.createHttpClient
 import com.paperwala.data.repository.EditionRepository
@@ -29,14 +28,13 @@ import com.paperwala.domain.ai.ArticleEnhancerFactory
 import com.paperwala.domain.ai.CloudArticleEnhancer
 import com.paperwala.domain.ai.RuleBasedEnhancer
 import com.paperwala.domain.usecase.GenerateMorningEditionUseCase
-import com.paperwala.util.Constants
+import com.paperwala.util.ApiKeys
 import org.koin.dsl.module
 
 val networkModule = module {
     single { createHttpClient() }
     single { NewsApiService(get()) }
     single { GNewsApiService(get()) }
-    single { NewsdataApiService(get()) }
     single { RssFeedService(get()) }
     single { GeminiApiService(get()) }
 }
@@ -47,11 +45,9 @@ val repositoryModule = module {
             database = get(),
             newsApiService = get(),
             gNewsApiService = get(),
-            newsdataApiService = get(),
             rssFeedService = get(),
-            newsApiKey = Constants.NEWS_API_KEY,
-            gNewsApiKey = Constants.GNEWS_API_KEY,
-            newsdataApiKey = Constants.NEWSDATA_API_KEY
+            newsApiKey = ApiKeys.NEWS_API_KEY,
+            gNewsApiKey = ApiKeys.GNEWS_API_KEY
         )
     }
     single { UserRepository(database = get()) }
@@ -61,7 +57,7 @@ val repositoryModule = module {
 
 val aiModule = module {
     single { RuleBasedEnhancer() }
-    single { CloudArticleEnhancer(geminiApiService = get(), apiKey = Constants.GEMINI_API_KEY) }
+    single { CloudArticleEnhancer(geminiApiService = get(), apiKey = ApiKeys.GEMINI_API_KEY) }
     single {
         ArticleEnhancerFactory(
             cloudEnhancer = get<CloudArticleEnhancer>(),

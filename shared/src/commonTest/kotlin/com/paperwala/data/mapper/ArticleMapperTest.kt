@@ -4,7 +4,6 @@ import com.paperwala.data.remote.dto.GNewsArticle
 import com.paperwala.data.remote.dto.GNewsSource
 import com.paperwala.data.remote.dto.NewsApiArticle
 import com.paperwala.data.remote.dto.NewsApiSource
-import com.paperwala.data.remote.dto.NewsdataArticle
 import com.paperwala.data.remote.dto.RssItem
 import com.paperwala.domain.model.Article
 import com.paperwala.domain.model.TopicCategory
@@ -177,59 +176,6 @@ class ArticleMapperTest {
 
         val article = ArticleMapper.fromRssItem(item, "Src")
         assertEquals("https://example.com/img.jpg", article.imageUrl)
-    }
-
-    // --- fromNewsdata ---
-
-    @Test
-    fun fromNewsdataMapsBasicFields() {
-        val dto = NewsdataArticle(
-            articleId = "nd-123",
-            title = "Newsdata Article",
-            link = "https://newsdata.io/article",
-            description = "Newsdata summary",
-            sourceName = "Indian Express",
-            sourceId = "indianexpress",
-            imageUrl = "https://newsdata.io/image.jpg",
-            creator = listOf("Author One"),
-            category = listOf("technology")
-        )
-
-        val article = ArticleMapper.fromNewsdata(dto)
-
-        assertEquals("nd-123", article.id)
-        assertEquals("Newsdata Article", article.title)
-        assertEquals("Newsdata summary", article.summary)
-        assertEquals("Indian Express", article.sourceName)
-        assertEquals("Author One", article.author)
-        assertEquals(TopicCategory.TECHNOLOGY, article.category)
-    }
-
-    @Test
-    fun fromNewsdataMapsCategories() {
-        fun categoryFor(cat: String): TopicCategory {
-            val dto = NewsdataArticle(title = "T", link = "L", category = listOf(cat))
-            return ArticleMapper.fromNewsdata(dto).category
-        }
-
-        assertEquals(TopicCategory.POLITICS, categoryFor("politics"))
-        assertEquals(TopicCategory.SPORTS, categoryFor("sports"))
-        assertEquals(TopicCategory.HEALTH, categoryFor("health"))
-        assertEquals(TopicCategory.WORLD_NEWS, categoryFor("world"))
-        assertEquals(TopicCategory.INDIA, categoryFor("top"))
-        assertEquals(TopicCategory.WORLD_NEWS, categoryFor("unknown_category"))
-    }
-
-    @Test
-    fun fromNewsdataFallsBackToSourceIdWhenNameNull() {
-        val dto = NewsdataArticle(
-            title = "T",
-            link = "L",
-            sourceName = null,
-            sourceId = "thehindu"
-        )
-
-        assertEquals("thehindu", ArticleMapper.fromNewsdata(dto).sourceName)
     }
 
     // --- deduplicateArticles ---

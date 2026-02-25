@@ -72,7 +72,7 @@ class SettingsViewModel(
             modelSizeMb = modelSizeBytes / (1024 * 1024),
             aiStatus = when {
                 prefs.enableLocalLlm && modelDownloaded -> AiStatus.LOCAL_LLM
-                com.paperwala.util.Constants.GEMINI_API_KEY.isNotBlank() -> AiStatus.CLOUD
+                com.paperwala.util.ApiKeys.GEMINI_API_KEY.isNotBlank() -> AiStatus.CLOUD
                 else -> AiStatus.RULE_BASED
             },
             readingTimeMinutes = prefs.readingTimeMinutes,
@@ -101,6 +101,12 @@ class SettingsViewModel(
         }
         val prefs = userRepository.getPreferences()
         userRepository.savePreferences(prefs.copy(enableNotifications = enabled))
+        loadSettings()
+    }
+
+    fun updateReadingTime(minutes: Int) {
+        val prefs = userRepository.getPreferences()
+        userRepository.savePreferences(prefs.copy(readingTimeMinutes = minutes))
         loadSettings()
     }
 

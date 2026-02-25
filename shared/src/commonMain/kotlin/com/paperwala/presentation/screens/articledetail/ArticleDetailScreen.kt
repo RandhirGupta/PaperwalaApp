@@ -16,6 +16,7 @@
 package com.paperwala.presentation.screens.articledetail
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -50,8 +51,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
@@ -73,6 +76,7 @@ class ArticleDetailScreen(
         val navigator = LocalNavigator.currentOrThrow
         val viewModel = koinScreenModel<ArticleDetailViewModel>()
         val isBookmarked by viewModel.isBookmarked.collectAsState()
+        val uriHandler = LocalUriHandler.current
 
         LaunchedEffect(Unit) {
             viewModel.init(article.isBookmarked)
@@ -254,7 +258,11 @@ class ArticleDetailScreen(
                             text = "Read full article at ${article.sourceName}",
                             style = MaterialTheme.typography.labelLarge,
                             color = PaperwalaColors.LinkBlue,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            textDecoration = TextDecoration.Underline,
+                            modifier = Modifier.clickable {
+                                uriHandler.openUri(article.sourceUrl)
+                            }
                         )
                     }
 

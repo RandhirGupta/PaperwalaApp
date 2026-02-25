@@ -46,7 +46,7 @@ Every morning, a newspaper wala in India delivers your paper to your doorstep. Y
 
 - Kotlin Multiplatform project setup (Android + iOS shared module)
 - SQLDelight database schema (Articles, Editions, Reading History, User Preferences)
-- 4 news API integrations (NewsAPI, GNews, Newsdata, RSS feeds)
+- 3 news API integrations (NewsAPI, GNews, RSS feeds)
 - ArticleMapper with deduplication and category inference
 - Onboarding flow (topic selection, source picker, reading time, delivery time)
 - Splash screen with Voyager navigation
@@ -104,21 +104,32 @@ Every morning, a newspaper wala in India delivers your paper to your doorstep. Y
    ```
 
 2. Open in Android Studio
-3. Add your API keys in `shared/src/commonMain/kotlin/com/paperwala/util/Constants.kt`:
 
-   ```kotlin
-   const val NEWS_API_KEY = "your-newsapi-key"
-   const val GNEWS_API_KEY = "your-gnews-key"
-   const val GEMINI_API_KEY = "your-gemini-key"  // optional, for AI summaries
+3. Add your API keys to `local.properties` (this file is in `.gitignore` and never committed):
+
+   ```properties
+   NEWS_API_KEY=your-newsapi-key
+   GNEWS_API_KEY=your-gnews-key
+   GEMINI_API_KEY=your-gemini-key
    ```
+
+   All keys are optional — the app works without them using RSS feeds and rule-based summaries.
 
 4. Sync Gradle and run on emulator/device
 
-### API Keys (Free Tiers)
+### API Keys (All Free Tiers)
 
-- [NewsAPI.org](https://newsapi.org/) — 1,000 calls/month
-- [GNews.io](https://gnews.io/) — 100 requests/day
-- [Newsdata.io](https://newsdata.io/) — 200 credits/day
+| Key | Service | Free Tier | How to Get |
+|-----|---------|-----------|------------|
+| `NEWS_API_KEY` | [NewsAPI.org](https://newsapi.org/) | 100 requests/day | Sign up → Dashboard → Copy API key |
+| `GNEWS_API_KEY` | [GNews.io](https://gnews.io/) | 100 requests/day | Sign up → Dashboard → Copy API token |
+| `GEMINI_API_KEY` | [Google AI Studio](https://aistudio.google.com/apikey) | 1,000 requests/day | Sign in with Google → Create API key |
+
+**Notes:**
+
+- Without news API keys, the app fetches articles from RSS feeds (The Hindu, NDTV, Times of India, BBC, etc.)
+- Without a Gemini key, article summaries use the rule-based extractor or on-device LLM
+- Keys are injected via Gradle `BuildConfig` at build time — they never appear in source code
 
 ---
 

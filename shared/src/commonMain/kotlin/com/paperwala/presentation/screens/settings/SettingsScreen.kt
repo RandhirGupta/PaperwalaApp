@@ -47,6 +47,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -136,20 +137,18 @@ class SettingsScreen : Screen {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // General section
-            SettingsSectionHeader("General")
-
-            SettingsRow(
-                label = "Reading Time",
-                value = "${state.readingTimeMinutes} min"
+            // Reading & Delivery section
+            ReadingDeliverySection(
+                readingTimeMinutes = state.readingTimeMinutes,
+                deliveryTimeHour = state.deliveryTimeHour,
+                onReadingTimeChange = viewModel::updateReadingTime,
+                onDeliveryTimeChange = viewModel::updateDeliveryTime
             )
 
-            SettingsRow(
-                label = "Delivery Time",
-                value = "${state.deliveryTimeHour}:00"
-            )
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Notifications toggle
+            SettingsSectionHeader("General")
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -517,6 +516,130 @@ private fun AiStatusChip(status: AiStatus) {
             .background(color.copy(alpha = 0.12f), RoundedCornerShape(4.dp))
             .padding(horizontal = 8.dp, vertical = 2.dp)
     )
+}
+
+@Composable
+private fun ReadingDeliverySection(
+    readingTimeMinutes: Int,
+    deliveryTimeHour: Int,
+    onReadingTimeChange: (Int) -> Unit,
+    onDeliveryTimeChange: (Int) -> Unit
+) {
+    SettingsSectionHeader("Reading & Delivery")
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            // Reading time selector
+            Text(
+                text = "Reading Time",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "~${readingTimeMinutes / 3} stories per edition",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                listOf(5, 10, 15, 20, 30).forEach { minutes ->
+                    val isSelected = readingTimeMinutes == minutes
+                    Surface(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .clickable { onReadingTimeChange(minutes) },
+                        shape = CircleShape,
+                        color = if (isSelected) PaperwalaColors.MastheadRed
+                        else MaterialTheme.colorScheme.surface
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = "$minutes",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isSelected) PaperwalaColors.PaperWhite
+                                    else MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "min",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = if (isSelected) PaperwalaColors.PaperWhite.copy(alpha = 0.8f)
+                                    else PaperwalaColors.InkLightGray
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline)
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Delivery time selector
+            Text(
+                text = "Delivery Time",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Your paper will be ready by ${deliveryTimeHour}:00 AM",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                (5..10).forEach { hour ->
+                    val isSelected = deliveryTimeHour == hour
+                    Surface(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .clickable { onDeliveryTimeChange(hour) },
+                        shape = CircleShape,
+                        color = if (isSelected) PaperwalaColors.MastheadRed
+                        else MaterialTheme.colorScheme.surface
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = "$hour",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isSelected) PaperwalaColors.PaperWhite
+                                    else MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "AM",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = if (isSelected) PaperwalaColors.PaperWhite.copy(alpha = 0.8f)
+                                    else PaperwalaColors.InkLightGray
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable

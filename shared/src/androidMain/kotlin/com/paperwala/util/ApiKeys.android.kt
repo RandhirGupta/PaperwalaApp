@@ -15,13 +15,10 @@
  */
 package com.paperwala.util
 
-object Constants {
-    // Edition settings
-    const val DEFAULT_READING_TIME_MINUTES = 10
-    const val DEFAULT_DELIVERY_HOUR = 7
-    const val MAX_ARTICLES_PER_SECTION = 5
-    const val ARTICLE_CACHE_HOURS = 48
+import com.paperwala.shared.BuildConfig
 
-    // LLM settings (model-specific values are in LlmModel enum)
-    const val LLM_MIN_BATTERY_PERCENT = 20
+actual object ApiKeys {
+    actual val NEWS_API_KEY: String = BuildConfig.NEWS_API_KEY
+    actual val GNEWS_API_KEY: String = BuildConfig.GNEWS_API_KEY
+    actual val GEMINI_API_KEY: String = BuildConfig.GEMINI_API_KEY
 }
